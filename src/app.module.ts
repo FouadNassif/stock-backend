@@ -1,10 +1,32 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+
+import { AuthModule } from './auth/auth.module';
+import { MembersModule } from './members/members.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { envValidationSchema } from './config/env.validation';
+import { ReferralsModule } from './referrals/referrals.module';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validationSchema: envValidationSchema,
+    }),
+
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.getOrThrow<string>('MONGO_URI'),
+      }),
+    }),
+
+    AuthModule,
+    MembersModule,
+    NotificationsModule,
+    ReferralsModule,
+  ],
 })
-export class AppModule {}
+export class AppModule { }
