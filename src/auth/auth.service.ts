@@ -198,7 +198,7 @@ export class AuthService {
             throw new ForbiddenException('Please verify your email before setting a password');
         }
 
-        member.passwordHash = await bcrypt.hash(dto.password, 10);
+        member.password = await bcrypt.hash(dto.password, 10);
         await member.save();
 
         return {
@@ -211,7 +211,7 @@ export class AuthService {
 
         const member = await this.memberModel.findOne({ email: normalizedEmail }).exec();
 
-        if (!member || !member.passwordHash) {
+        if (!member || !member.password) {
             throw new UnauthorizedException('Invalid email or password');
         }
 
@@ -223,7 +223,7 @@ export class AuthService {
             throw new ForbiddenException('Your account is suspended');
         }
 
-        const isPasswordValid = await bcrypt.compare(dto.password, member.passwordHash);
+        const isPasswordValid = await bcrypt.compare(dto.password, member.password);
 
         if (!isPasswordValid) {
             throw new UnauthorizedException('Invalid email or password');
