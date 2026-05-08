@@ -27,7 +27,7 @@ export class Member {
     dateOfBirth!: Date;
 
     @Prop()
-    passwordHash?: string;
+    password?: string;
 
     @Prop({ default: false })
     emailVerified!: boolean;
