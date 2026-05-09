@@ -4,6 +4,7 @@ import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
 import { buildOtpEmailTemplate } from './templates/otp.template';
 import { buildNewAdminEmailTemplate } from './templates/admin.template';
+import { buildWalletCreditEmailTemplate } from './templates/transaction.template';
 
 @Injectable()
 export class NotificationsService {
@@ -42,6 +43,24 @@ export class NotificationsService {
       subject: 'Welcome to Stock Market',
       text: `Dear ${fullName}, your temporary password is ${tempPassword}. Please log in and change it immediately.`,
       html: buildNewAdminEmailTemplate({ fullName, email, tempPassword }),
+    });
+  }
+
+
+  async sendWalletCreditEmail(
+    email: string,
+    fullName: string,
+    amount: number,
+    newBalance: number,
+  ): Promise<void> {
+    const from = this.configService.getOrThrow<string>('MAIL_FROM');
+
+    await this.transporter.sendMail({
+      from,
+      to: email,
+      subject: 'Wallet Deposit Confirmation',
+      text: `Dear ${fullName}, your wallet has been credited with $${amount}. Your new balance is $${newBalance}.`,
+      html: buildWalletCreditEmailTemplate({ fullName, amount, newBalance }),
     });
   }
 

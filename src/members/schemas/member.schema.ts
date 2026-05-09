@@ -35,7 +35,6 @@ export class Member {
     @Prop({ required: true, unique: true, uppercase: true, trim: true })
     referralCode!: string;
 
-
     @Prop({ enum: IdentityStatus, default: IdentityStatus.Pending, })
     identityStatus!: IdentityStatus;
 

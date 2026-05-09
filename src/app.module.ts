@@ -9,6 +9,7 @@ import { envValidationSchema } from './config/env.validation';
 import { ReferralsModule } from './referrals/referrals.module';
 import { AdminModule } from './admin/admin.module';
 import { StocksModule } from './stocks/stocks.module';
+import { WalletModule } from './wallet/wallet.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { StocksModule } from './stocks/stocks.module';
     ReferralsModule,
     AdminModule,
     StocksModule,
+    WalletModule,
   ],
 })
 export class AppModule { }
