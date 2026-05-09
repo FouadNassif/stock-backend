@@ -106,12 +106,12 @@ export class AdminService implements OnModuleInit {
 
         const temporaryPassword = generateTemporaryPassword();
 
-        const passwordHash = await bcrypt.hash(temporaryPassword, 10);
+        const password = await bcrypt.hash(temporaryPassword, 10);
 
         const newAdmin = await this.adminModel.create({
             fullName: dto.fullName,
             email: normalizedEmail,
-            password: passwordHash,
+            password,
             role: dto.role,
             isActive: true,
             mustChangePassword: true,
