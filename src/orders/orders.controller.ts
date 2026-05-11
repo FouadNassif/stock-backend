@@ -29,7 +29,7 @@ export class OrdersController {
     sellStock(@CurrentMember() currentMember: JwtPayload, @Body() dto: SellOrderDto) {
         return this.orderService.sellStock(currentMember.sub, dto);
     }
-    @Get('potfolio')
+    @Get('portfolio')
     getPortfolio(@CurrentMember() currentMember: JwtPayload) {
         return this.orderService.getPortfolio(currentMember.sub);
     }
