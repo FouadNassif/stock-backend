@@ -4,7 +4,7 @@ import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
 import { buildOtpEmailTemplate } from './templates/otp.template';
 import { buildNewAdminEmailTemplate } from './templates/admin.template';
-import { buildWalletCreditEmailTemplate } from './templates/transaction.template';
+import { buildWalletCreditEmailTemplate, buildWithdrawalApprovedEmailTemplate, buildWithdrawalRejectedEmailTemplate } from './templates/transaction.template';
 
 @Injectable()
 export class NotificationsService {
@@ -61,6 +61,40 @@ export class NotificationsService {
       subject: 'Wallet Deposit Confirmation',
       text: `Dear ${fullName}, your wallet has been credited with $${amount}. Your new balance is $${newBalance}.`,
       html: buildWalletCreditEmailTemplate({ fullName, amount, newBalance }),
+    });
+  }
+
+  async sendWithdrawalApprovedEmail(
+    email: string,
+    fullName: string,
+    amount: number,
+    newBalance: number,
+  ): Promise<void> {
+    const from = this.configService.getOrThrow<string>('MAIL_FROM');
+
+    await this.transporter.sendMail({
+      from,
+      to: email,
+      subject: 'Withdrawal Approved',
+      text: `Dear ${fullName}, your withdrawal request of $${amount} has been approved. Your new wallet balance is $${newBalance}.`,
+      html: buildWithdrawalApprovedEmailTemplate({ fullName, amount, newBalance }),
+    });
+  }
+
+  async sendWithdrawalRejectedEmail(
+    email: string,
+    fullName: string,
+    amount: number,
+    reason: string,
+  ): Promise<void> {
+    const from = this.configService.getOrThrow<string>('MAIL_FROM');
+
+    await this.transporter.sendMail({
+      from,
+      to: email,
+      subject: 'Withdrawal Rejected',
+      text: `Dear ${fullName}, your withdrawal request of $${amount} has been rejected. Reason: ${reason}`,
+      html: buildWithdrawalRejectedEmailTemplate({ fullName, amount, reason }),
     });
   }
 
