@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Stocks module manages the stock catalogue and price history.
+The Stocks module manages the stock catalogue and stock price history.
 
 ## Routes
 
@@ -27,6 +27,15 @@ The Stocks module manages the stock catalogue and price history.
 }
 ```
 
+## Filters
+
+```txt
+GET /api/stocks?sector=Technology
+GET /api/stocks?isListed=true
+GET /api/stocks?search=apple
+GET /api/stocks?page=1&limit=10
+```
+
 ## Permissions
 
 | Action | Access |
@@ -39,4 +48,5 @@ The Stocks module manages the stock catalogue and price history.
 - Ticker is unique and stored uppercase.
 - Creating a stock creates the first price history record.
 - Updating `currentPrice` creates a new price history record.
-- Delisting sets `isListed = false`; it does not delete the stock.
+- Delisting sets `isListed = false` instead of deleting.
+- Buy orders cannot be placed for delisted stocks.

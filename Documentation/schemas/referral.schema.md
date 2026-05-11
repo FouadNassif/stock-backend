@@ -14,13 +14,15 @@ Stores referral relationships between members.
 
 | Field | Type | Required | Description |
 |---|---|---:|---|
-| referrerId | ObjectId | Yes | Member who owns code |
-| referredMemberId | ObjectId | Yes | Referred member |
-| referralCode | string | Yes | Code used |
+| referrerId | ObjectId | Yes | Member who owns referral code |
+| referredMemberId | ObjectId | Yes | New referred member |
+| referralCode | string | Yes | Referral code used |
 | status | enum | Yes | Referral status |
-| registeredAt | Date | No | Registration time |
-| emailVerifiedAt | Date | No | Email verification time |
-| rewardedAt | Date | No | Future reward time |
+| registeredAt | Date | No | Registration timestamp |
+| emailVerifiedAt | Date | No | Email verification timestamp |
+| rewardedAt | Date | No | Future reward timestamp |
+| createdAt | Date | Yes | Created by timestamps |
+| updatedAt | Date | Yes | Updated by timestamps |
 
 ## Enums
 
@@ -28,14 +30,14 @@ status: registered | email_verified | rewarded | cancelled
 
 ## Indexes
 
-referrerId + createdAt, referredMemberId unique, status
+referrerId + createdAt, referredMemberId unique, referralCode, status
 
 ## Example Document
 
 ```json
-{"referralCode":"JOHN123456","status":"email_verified"}
+{"referralCode":"ADAM123456","status":"email_verified"}
 ```
 
 ## Design Notes
 
-Separate collection supports one referrer to many referred members.
+Referral tracking is stored separately from members so one member can refer many other members.

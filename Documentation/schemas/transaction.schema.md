@@ -8,7 +8,7 @@ transactions
 
 ## Purpose
 
-Stores wallet and future order financial events.
+Stores wallet and trading financial events.
 
 ## Fields
 
@@ -16,14 +16,16 @@ Stores wallet and future order financial events.
 |---|---|---:|---|
 | memberId | ObjectId | Yes | Owner member |
 | type | enum | Yes | Transaction type |
-| amount | number | Yes | Amount |
-| status | enum | Yes | Status |
-| referenceId | string | Yes | Unique reference |
-| notes | string | No | Notes |
-| balanceBefore | number | Yes | Wallet balance before |
-| balanceAfter | number | Yes | Wallet balance after |
-| processedAt | Date | No | Completion/review time |
+| amount | number | Yes | Transaction amount |
+| status | enum | Yes | Transaction status |
+| referenceId | string | Yes | Unique reference or related order id |
+| notes | string | No | Internal notes |
+| balanceBefore | number | Yes | Wallet balance before transaction |
+| balanceAfter | number | Yes | Wallet balance after transaction |
+| processedAt | Date | No | When completed/reviewed |
 | rejectedReason | string | No | Reason if rejected |
+| createdAt | Date | Yes | Created by timestamps |
+| updatedAt | Date | Yes | Updated by timestamps |
 
 ## Enums
 
@@ -38,7 +40,7 @@ memberId + createdAt, memberId + type, status, type, referenceId unique
 ## Example Document
 
 ```json
-{"type":"deposit","amount":1000,"status":"completed"}
+{"type":"buy","amount":500,"status":"completed","balanceBefore":1000,"balanceAfter":500}
 ```
 
 ## Design Notes

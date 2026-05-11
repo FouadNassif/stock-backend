@@ -16,12 +16,14 @@ Stores internal platform users.
 |---|---|---:|---|
 | fullName | string | Yes | Admin full name |
 | email | string | Yes | Unique login email |
-| passwordHash | string | Yes | Hashed password |
+| password/passwordHash | string | Yes | Hashed password field depending on implementation |
 | role | enum | Yes | Admin role |
-| isActive | boolean | Yes | Active status |
+| isActive | boolean | Yes | Account active status |
 | mustChangePassword | boolean | Yes | Temporary password flag |
-| createdBy | ObjectId | No | Admin creator |
+| createdBy | ObjectId | No | Admin who created this user |
 | lastLoginAt | Date | No | Last login time |
+| createdAt | Date | Yes | Created by timestamps |
+| updatedAt | Date | Yes | Updated by timestamps |
 
 ## Enums
 
@@ -29,14 +31,14 @@ role: admin | analyst | support
 
 ## Indexes
 
-role, isActive, createdAt
+email unique, role, isActive, createdAt
 
 ## Example Document
 
 ```json
-{"fullName":"Leila Analyst","email":"leila.analyst@example.com","role":"analyst"}
+{"fullName":"Leila Analyst","email":"leila.analyst@example.com","role":"analyst","mustChangePassword":true}
 ```
 
 ## Design Notes
 
-Admin users are separate from members.
+Admin emails must also be unique against member emails. Admin users are separate from public members.

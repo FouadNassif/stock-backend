@@ -3,7 +3,9 @@
     {
       "fullName": "Omar Admin",
       "email": "omar.admin@example.com",
-      "role": "admin"
+      "role": "admin",
+      "password": "Admin@123456",
+      "notes": "Seeded from environment variables in local development"
     },
     {
       "fullName": "Leila Analyst",
@@ -21,13 +23,17 @@
       "fullName": "John Referrer",
       "email": "john@example.com",
       "nationalId": "NAT-REF-001",
-      "dateOfBirth": "1995-01-01"
+      "dateOfBirth": "1995-01-01",
+      "emailVerified": true,
+      "referralCode": "JOHN123456"
     },
     {
       "fullName": "Adam Investor",
       "email": "adam@example.com",
       "nationalId": "NAT-INV-001",
-      "dateOfBirth": "1998-05-12"
+      "dateOfBirth": "1998-05-12",
+      "emailVerified": true,
+      "referredBy": "JOHN123456"
     }
   ],
   "stocks": [
@@ -69,14 +75,42 @@
   ],
   "transactions": [
     {
+      "memberEmail": "adam@example.com",
       "type": "deposit",
       "amount": 1000,
       "status": "completed"
     },
     {
+      "memberEmail": "adam@example.com",
       "type": "withdrawal",
       "amount": 100,
       "status": "pending"
+    },
+    {
+      "memberEmail": "adam@example.com",
+      "type": "buy",
+      "amount": 365,
+      "status": "completed"
+    }
+  ],
+  "orders": [
+    {
+      "memberEmail": "adam@example.com",
+      "ticker": "AAPL",
+      "type": "buy",
+      "quantity": 2,
+      "priceAtExecution": 182.5,
+      "totalAmount": 365,
+      "status": "completed"
+    }
+  ],
+  "positions": [
+    {
+      "memberEmail": "adam@example.com",
+      "ticker": "AAPL",
+      "sharesHeld": 2,
+      "avgPurchasePrice": 182.5,
+      "status": "open"
     }
   ]
 }
