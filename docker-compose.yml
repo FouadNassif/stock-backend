@@ -3,8 +3,9 @@ services:
     image: mongo:7
     container_name: stock-market-mongodb
     restart: unless-stopped
+    command: [ "mongod", "--replSet", "rs0", "--bind_ip_all" ]
     ports:
-      - '27017:27017'
+      - "27017:27017"
     environment:
       MONGO_INITDB_DATABASE: stock-market
     volumes:
@@ -15,9 +16,9 @@ services:
     container_name: stock-market-mongo-express
     restart: unless-stopped
     ports:
-      - '8081:8081'
+      - "8081:8081"
     environment:
-      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017/
+      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017/?replicaSet=rs0
       ME_CONFIG_BASICAUTH: false
     depends_on:
       - mongodb

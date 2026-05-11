@@ -10,6 +10,7 @@ import { ReferralsModule } from './referrals/referrals.module';
 import { AdminModule } from './admin/admin.module';
 import { StocksModule } from './stocks/stocks.module';
 import { WalletModule } from './wallet/wallet.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { WalletModule } from './wallet/wallet.module';
     AdminModule,
     StocksModule,
     WalletModule,
+    OrdersModule,
   ],
 })
 export class AppModule { }
