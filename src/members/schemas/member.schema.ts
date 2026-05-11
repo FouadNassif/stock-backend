@@ -4,6 +4,8 @@ import { HydratedDocument, Types } from 'mongoose';
 
 export type MemberDocument = HydratedDocument<Member> & {
     _id: Types.ObjectId;
+    createdAt: Date;
+    updatedAt: Date;
 };
 
 export enum IdentityStatus {
