@@ -10,11 +10,13 @@ import { AdminService } from './admin.service';
 import { Admin, AdminSchema } from './schemas/admin.schema';
 import { AdminJwtStrategy } from './strategies/admin-jwt.strategy';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { WalletModule } from '../wallet/wallet.module';
 
 @Module({
   imports: [
     PassportModule,
     NotificationsModule,
+    WalletModule,
 
     MongooseModule.forFeature([
       {

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards, Query } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AdminLoginDto } from './dto/admin-login.dto';
 import { ListAdminsQueryDto } from './dto/list-admins-query.dto';
@@ -10,11 +10,17 @@ import { CurrentAdmin } from './decorators/current-admin.decorator';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import type { AdminJwtPayload } from './types/admin-jwt-payload.type';
 import { ChangeAdminPasswordDto } from './dto/change-admin-password.dto';
+import { WalletService } from '../wallet/wallet.service';
+import { ListWithdrawalsQueryDto } from '../wallet/dto/list-withdrawals-query.dto';
+import { RejectWithdrawalDto } from '../wallet/dto/reject-withdrawal.dto';
 
 
 @Controller('admin')
 export class AdminController {
-    constructor(private readonly adminService: AdminService) { }
+    constructor(
+        private readonly adminService: AdminService,
+        private readonly walletService: WalletService,
+    ) { }
 
     @Post('auth/login')
     login(@Body() dto: AdminLoginDto): Promise<{
@@ -49,5 +55,33 @@ export class AdminController {
     @AdminRoles(AdminRole.Admin)
     listAdmins(@Query() query: ListAdminsQueryDto) {
         return this.adminService.listAdmins(query);
+    }
+
+    @Get('withdrawals')
+    @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+    @AdminRoles(AdminRole.Admin)
+    listWithdrawals(@Query() query: ListWithdrawalsQueryDto) {
+        return this.walletService.listWithdrawals(query);
+    }
+
+    @Post('withdrawals/:id/approve')
+    @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+    @AdminRoles(AdminRole.Admin)
+    approveWithdrawal(
+        @Param('id') id: string,
+        @CurrentAdmin() currentAdmin: AdminJwtPayload,
+    ) {
+        return this.walletService.approveWithdrawal(id, currentAdmin.sub);
+    }
+
+    @Post('withdrawals/:id/reject')
+    @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+    @AdminRoles(AdminRole.Admin)
+    rejectWithdrawal(
+        @Param('id') id: string,
+        @CurrentAdmin() currentAdmin: AdminJwtPayload,
+        @Body() dto: RejectWithdrawalDto,
+    ) {
+        return this.walletService.rejectWithdrawal(id, currentAdmin.sub, dto);
     }
 }
