@@ -11,6 +11,7 @@ import { Admin, AdminSchema } from './schemas/admin.schema';
 import { AdminJwtStrategy } from './strategies/admin-jwt.strategy';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { WalletModule } from '../wallet/wallet.module';
+import { Member, MemberSchema } from '../members/schemas/member.schema';
 
 @Module({
   imports: [
@@ -23,6 +24,10 @@ import { WalletModule } from '../wallet/wallet.module';
         name: Admin.name,
         schema: AdminSchema,
       },
+      {
+        name: Member.name,
+        schema: MemberSchema,
+      }
     ]),
 
     JwtModule.registerAsync({

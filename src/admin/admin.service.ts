@@ -18,11 +18,12 @@ import {
 } from './schemas/admin.schema';
 import { AdminJwtPayload } from './types/admin-jwt-payload.type';
 import { CreateAdminDto } from './dto/create-admin.dto';
-import { NotificationsService } from 'src/notifications/notifications.service';
-import { generateTemporaryPassword } from 'src/common/utils/password.util';
+import { NotificationsService } from '../notifications/notifications.service';
+import { generateTemporaryPassword } from '../common/utils/password.util';
 
 import { ListAdminsQueryDto } from './dto/list-admins-query.dto';
 import { ChangeAdminPasswordDto } from './dto/change-admin-password.dto';
+import { Member, MemberDocument } from '../members/schemas/member.schema';
 
 type AdminListFilter = {
     role?: AdminRole;
@@ -38,6 +39,9 @@ export class AdminService implements OnModuleInit {
     constructor(
         @InjectModel(Admin.name)
         private readonly adminModel: Model<AdminDocument>,
+
+        @InjectModel(Member.name)
+        private readonly memberModel: Model<MemberDocument>,
 
         private readonly configService: ConfigService,
         private readonly jwtService: JwtService,
@@ -96,11 +100,11 @@ export class AdminService implements OnModuleInit {
     async createAdmin(currentAdminId: string, dto: CreateAdminDto) {
         const normalizedEmail = dto.email.toLowerCase();
 
-        const existingAdmin = await this.adminModel
-            .findOne({ email: normalizedEmail })
-            .exec();
+        const existingAdmin = await this.adminModel.findOne({ email: normalizedEmail }).exec();
 
-        if (existingAdmin) {
+        const existingMemberEmail = await this.memberModel.findOne({ email: normalizedEmail }).exec();
+
+        if (existingAdmin || existingMemberEmail) {
             throw new ConflictException('Email already exists');
         }
 
