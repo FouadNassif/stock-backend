@@ -23,6 +23,7 @@ import { generateOtpCode, isAdult, generateReferralCode } from '../common/utils/
 import { Member, MemberDocument } from '../members/schemas/member.schema';
 import { NotificationsService } from '../notifications/notifications.service';
 import { ReferralsService } from '../referrals/referrals.service';
+import { Admin, AdminDocument } from '../admin/schemas/admin.schema';
 
 @Injectable()
 export class AuthService {
@@ -32,6 +33,9 @@ export class AuthService {
 
         @InjectModel(Otp.name)
         private readonly otpModel: Model<OtpDocument>,
+
+        @InjectModel(Admin.name)
+        private readonly adminModel: Model<AdminDocument>,
 
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
@@ -51,7 +55,9 @@ export class AuthService {
             })
             .exec();
 
-        if (existingMember) {
+        const existingAdmin = await this.adminModel.findOne({ email: normalizedEmail }).exec();
+
+        if (existingMember || existingAdmin) {
             throw new ConflictException('Email or national ID already exists');
         }
 
