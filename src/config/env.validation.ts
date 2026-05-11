@@ -2,6 +2,7 @@ import * as Joi from 'joi';
 
 export const envValidationSchema = Joi.object({
     PORT: Joi.number().default(3000),
+    APP_URL: Joi.string().required(),
 
     MONGO_URI: Joi.string().required(),
 
@@ -20,4 +21,8 @@ export const envValidationSchema = Joi.object({
     ADMIN_EMAIL: Joi.string().email().required(),
     ADMIN_PASSWORD: Joi.string().min(8).required(),
     ADMIN_FULL_NAME: Joi.string().required(),
+
+    REDIS_HOST: Joi.string().required(),
+    REDIS_PORT: Joi.string().required(),
+    REDIS_PASSWORD: Joi.string(),
 });
