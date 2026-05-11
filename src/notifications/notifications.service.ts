@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
-import { buildOtpEmailTemplate } from './templates/otp.template';
+import { buildOtpEmailTemplate, buildPasswordResetOtpEmailTemplate } from './templates/otp.template';
 import { buildNewAdminEmailTemplate } from './templates/admin.template';
 import { buildWalletCreditEmailTemplate, buildWithdrawalApprovedEmailTemplate, buildWithdrawalRejectedEmailTemplate } from './templates/transaction.template';
 import { buildTradeConfirmationEmailTemplate } from './templates/order.template';
@@ -125,6 +125,25 @@ export class NotificationsService {
           ? `Dear ${params.fullName}, your buy order for ${params.quantity} shares of ${params.ticker} was completed successfully. Total amount: $${params.totalAmount}.`
           : `Dear ${params.fullName}, your sell order for ${params.quantity} shares of ${params.ticker} was completed successfully. Total amount: $${params.totalAmount}. Realized P&L: $${params.realizedProfitLoss ?? 0}.`,
       html: buildTradeConfirmationEmailTemplate(params),
+    });
+  }
+
+  async sendPasswordResetOtpEmail(
+    email: string,
+    fullName: string,
+    code: string,
+  ): Promise<void> {
+    const from = this.configService.getOrThrow<string>('MAIL_FROM');
+
+    await this.transporter.sendMail({
+      from,
+      to: email,
+      subject: 'Password Reset OTP',
+      text: `Dear ${fullName}, your password reset code is ${code}. It expires in 10 minutes.`,
+      html: buildPasswordResetOtpEmailTemplate({
+        fullName,
+        code,
+      }),
     });
   }
 

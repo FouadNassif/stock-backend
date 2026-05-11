@@ -7,6 +7,9 @@ import { RegisterQueryDto } from './dto/register-query.dto';
 import { ResendOtpDto } from './dto/resend-otp.dto';
 import { SetPasswordDto } from './dto/set-password.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { VerifyResetOtpDto } from './dto/verify-reset-otp.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -40,5 +43,32 @@ export class AuthController {
     @Post('login')
     login(@Body() dto: LoginDto): Promise<{ accessToken: string }> {
         return this.authService.login(dto);
+    }
+
+    @Post('forgot-password')
+    forgotPassword(
+        @Body() dto: ForgotPasswordDto,
+    ): Promise<{
+        verificationId?: string;
+        message: string;
+    }> {
+        return this.authService.forgotPassword(dto);
+    }
+
+    @Post('verify-reset-otp')
+    verifyResetOtp(
+        @Body() dto: VerifyResetOtpDto,
+    ): Promise<{
+        resetToken: string;
+        message: string;
+    }> {
+        return this.authService.verifyResetOtp(dto);
+    }
+
+    @Post('reset-password')
+    resetPassword(
+        @Body() dto: ResetPasswordDto,
+    ): Promise<{ message: string }> {
+        return this.authService.resetPassword(dto);
     }
 }

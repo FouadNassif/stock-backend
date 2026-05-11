@@ -24,6 +24,10 @@ import { Member, MemberDocument } from '../members/schemas/member.schema';
 import { NotificationsService } from '../notifications/notifications.service';
 import { ReferralsService } from '../referrals/referrals.service';
 import { Admin, AdminDocument } from '../admin/schemas/admin.schema';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { PasswordResetTokenPayload } from './types/password-reset-token-payload.type';
+import { VerifyResetOtpDto } from './dto/verify-reset-otp.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -243,6 +247,185 @@ export class AuthService {
 
         return {
             accessToken: await this.jwtService.signAsync(payload),
+        };
+    }
+
+    async forgotPassword(dto: ForgotPasswordDto): Promise<{
+        verificationId?: string;
+        message: string;
+    }> {
+        const normalizedEmail = dto.email.toLowerCase();
+
+        const genericMessage =
+            'If this email exists, a password reset OTP has been sent.';
+
+        const member = await this.memberModel
+            .findOne({ email: normalizedEmail })
+            .exec();
+
+        if (!member) {
+            return {
+                message: genericMessage,
+            };
+        }
+
+        if (!member.isActive) {
+            return {
+                message: genericMessage,
+            };
+        }
+
+        if (!member.emailVerified) {
+            return {
+                message: genericMessage,
+            };
+        }
+
+        const code = generateOtpCode();
+        const codeHash = await bcrypt.hash(code, 10);
+        const verificationId = randomUUID();
+
+        const otpExpiresMinutes =
+            this.configService.get<number>('OTP_EXPIRES_MINUTES') ?? 10;
+
+        const expiresAt = new Date(Date.now() + otpExpiresMinutes * 60 * 1000);
+
+        await this.otpModel.create({
+            memberId: member._id,
+            verificationId,
+            codeHash,
+            purpose: OtpPurpose.PasswordReset,
+            expiresAt,
+            used: false,
+            attempts: 0,
+            maxAttempts: 5,
+        });
+
+        await this.notificationsService.sendPasswordResetOtpEmail(
+            member.email,
+            member.fullName,
+            code,
+        );
+
+        return {
+            verificationId,
+            message: genericMessage,
+        };
+    }
+
+    async verifyResetOtp(dto: VerifyResetOtpDto): Promise<{
+        resetToken: string;
+        message: string;
+    }> {
+        const otp = await this.otpModel
+            .findOne({
+                verificationId: dto.verificationId,
+                purpose: OtpPurpose.PasswordReset,
+            })
+            .exec();
+
+        if (!otp) {
+            throw new UnauthorizedException('Invalid or expired OTP');
+        }
+
+        if (otp.used) {
+            throw new UnauthorizedException('OTP has already been used');
+        }
+
+        if (otp.expiresAt < new Date()) {
+            throw new UnauthorizedException('OTP has expired');
+        }
+
+        if (otp.attempts >= otp.maxAttempts) {
+            throw new UnauthorizedException('Maximum OTP attempts exceeded');
+        }
+
+        const isCodeValid = await bcrypt.compare(dto.code, otp.codeHash);
+
+        if (!isCodeValid) {
+            otp.attempts += 1;
+            await otp.save();
+
+            throw new UnauthorizedException('Invalid OTP code');
+        }
+
+        const member = await this.memberModel.findById(otp.memberId).exec();
+
+        if (!member || !member.isActive || !member.emailVerified) {
+            throw new UnauthorizedException('Invalid reset request');
+        }
+
+        otp.used = true;
+        otp.usedAt = new Date();
+        await otp.save();
+
+        const payload: PasswordResetTokenPayload = {
+            sub: member._id.toString(),
+            email: member.email,
+            type: 'password-reset',
+        };
+
+        const resetToken = await this.jwtService.signAsync(payload, {
+            expiresIn: '10m',
+        });
+
+        return {
+            resetToken,
+            message: 'OTP verified. You may now reset your password.',
+        };
+    }
+
+    async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
+        let payload: PasswordResetTokenPayload;
+
+        try {
+            payload = await this.jwtService.verifyAsync<PasswordResetTokenPayload>(
+                dto.resetToken,
+            );
+        } catch {
+            throw new UnauthorizedException('Invalid or expired reset token');
+        }
+
+        if (payload.type !== 'password-reset') {
+            throw new UnauthorizedException('Invalid reset token');
+        }
+
+        const member = await this.memberModel.findById(payload.sub).exec();
+
+        if (!member) {
+            throw new UnauthorizedException('Invalid reset token');
+        }
+
+        if (!member.isActive) {
+            throw new UnauthorizedException('Inactive member account');
+        }
+
+        if (!member.emailVerified) {
+            throw new UnauthorizedException('Member email is not verified');
+        }
+
+        if (!member.password) {
+            throw new BadRequestException('Password has not been set for this account');
+        }
+
+        const isSamePassword = await bcrypt.compare(
+            dto.newPassword,
+            member.password,
+        );
+
+        if (isSamePassword) {
+            throw new BadRequestException(
+                'New password must be different from current password',
+            );
+        }
+
+        const passwordHash = await bcrypt.hash(dto.newPassword, 10);
+
+        member.password = passwordHash;
+        await member.save();
+
+        return {
+            message: 'Password reset successfully',
         };
     }
 
