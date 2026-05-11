@@ -5,6 +5,7 @@ import { Transporter } from 'nodemailer';
 import { buildOtpEmailTemplate } from './templates/otp.template';
 import { buildNewAdminEmailTemplate } from './templates/admin.template';
 import { buildWalletCreditEmailTemplate, buildWithdrawalApprovedEmailTemplate, buildWithdrawalRejectedEmailTemplate } from './templates/transaction.template';
+import { buildTradeConfirmationEmailTemplate } from './templates/order.template';
 
 @Injectable()
 export class NotificationsService {
@@ -95,6 +96,35 @@ export class NotificationsService {
       subject: 'Withdrawal Rejected',
       text: `Dear ${fullName}, your withdrawal request of $${amount} has been rejected. Reason: ${reason}`,
       html: buildWithdrawalRejectedEmailTemplate({ fullName, amount, reason }),
+    });
+  }
+
+  async sendTradeConfirmationEmail(params: {
+    email: string;
+    fullName: string;
+    type: 'buy' | 'sell';
+    ticker: string;
+    companyName: string;
+    quantity: number;
+    priceAtExecution: number;
+    totalAmount: number;
+    walletBalance: number;
+    realizedProfitLoss?: number;
+  }): Promise<void> {
+    const from = this.configService.getOrThrow<string>('MAIL_FROM');
+
+    await this.transporter.sendMail({
+      from,
+      to: params.email,
+      subject:
+        params.type === 'buy'
+          ? 'Buy Order Confirmation'
+          : 'Sell Order Confirmation',
+      text:
+        params.type === 'buy'
+          ? `Dear ${params.fullName}, your buy order for ${params.quantity} shares of ${params.ticker} was completed successfully. Total amount: $${params.totalAmount}.`
+          : `Dear ${params.fullName}, your sell order for ${params.quantity} shares of ${params.ticker} was completed successfully. Total amount: $${params.totalAmount}. Realized P&L: $${params.realizedProfitLoss ?? 0}.`,
+      html: buildTradeConfirmationEmailTemplate(params),
     });
   }
 
