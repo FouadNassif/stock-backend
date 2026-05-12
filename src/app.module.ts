@@ -11,6 +11,7 @@ import { AdminModule } from './admin/admin.module';
 import { StocksModule } from './stocks/stocks.module';
 import { WalletModule } from './wallet/wallet.module';
 import { OrdersModule } from './orders/orders.module';
+import { RedisModule } from './common/redis/redis.module';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { OrdersModule } from './orders/orders.module';
         uri: configService.getOrThrow<string>('MONGO_URI'),
       }),
     }),
-
+    RedisModule,
     AuthModule,
     MembersModule,
     NotificationsModule,
