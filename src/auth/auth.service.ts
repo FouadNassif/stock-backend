@@ -31,6 +31,8 @@ import { PasswordResetTokenPayload } from './types/password-reset-token-payload.
 import { VerifyResetOtpDto } from './dto/verify-reset-otp.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { RedisService } from 'src/common/redis/redis.service';
+import { AuthRateLimitAction, buildAuthComboRateLimitKey, buildAuthIpRateLimitKey } from './utils/auth-rate-limit.util';
+import { throwRateLimitException } from 'src/common/exceptions/rate-limit.exception';
 
 @Injectable()
 export class AuthService {
@@ -496,84 +498,61 @@ export class AuthService {
         throw new BadRequestException('Could not generate referral code');
     }
 
-    private normalizeIp(ipAddress: string): string {
-        return ipAddress.replace(/:/g, '_');
-    }
-
     private async loginCheckLimit(email: string, ipAddress: string): Promise<void> {
-        const normalizedIp = this.normalizeIp(ipAddress);
-
         const comboResult = await this.redisService.checkRateLimit({
-            key: `rate-limit:login:combo:${normalizedIp}:${email}`,
+            key: buildAuthComboRateLimitKey({
+                action: AuthRateLimitAction.Login,
+                email,
+                ipAddress,
+            }),
             maxAttempts: 5,
             windowSeconds: 15 * 60,
         });
 
         if (!comboResult.allowed) {
-            throw new HttpException(
-                {
-                    statusCode: HttpStatus.TOO_MANY_REQUESTS,
-                    message: `Too many login attempts. Please try again in ${comboResult.ttlSeconds} seconds.`,
-                    error: 'Too Many Requests',
-                },
-                HttpStatus.TOO_MANY_REQUESTS,
-            );
+            throwRateLimitException(`Too many login attempts. Please try again in ${comboResult.ttlSeconds} seconds.`);
         }
 
         const ipResult = await this.redisService.checkRateLimit({
-            key: `rate-limit:login:ip:${normalizedIp}`,
+            key: buildAuthIpRateLimitKey({
+                action: AuthRateLimitAction.Login,
+                ipAddress,
+            }),
             maxAttempts: 20,
             windowSeconds: 15 * 60,
         });
 
         if (!ipResult.allowed) {
-            throw new HttpException(
-                {
-                    statusCode: HttpStatus.TOO_MANY_REQUESTS,
-                    message: `Too many login attempts from this network. Please try again in ${ipResult.ttlSeconds} seconds.`,
-                    error: 'Too Many Requests',
-                },
-                HttpStatus.TOO_MANY_REQUESTS,
-            );
+            throwRateLimitException(`Too many login attempts from this network. Please try again in ${ipResult.ttlSeconds} seconds.`);
         }
     }
 
-
     private async forgetPasswordCheckLimit(email: string, ipAddress: string): Promise<void> {
-        const normalizedIp = this.normalizeIp(ipAddress);
-
         const comboResult = await this.redisService.checkRateLimit({
-            key: `rate-limit:forgot-password:combo:${normalizedIp}:${email}`,
+            key: buildAuthComboRateLimitKey({
+                action: AuthRateLimitAction.ForgotPassword,
+                email,
+                ipAddress,
+            }),
             maxAttempts: 3,
             windowSeconds: 15 * 60,
         });
 
         if (!comboResult.allowed) {
-            throw new HttpException(
-                {
-                    statusCode: HttpStatus.TOO_MANY_REQUESTS,
-                    message: `Too many password reset requests. Please try again in ${comboResult.ttlSeconds} seconds.`,
-                    error: 'Too Many Requests',
-                },
-                HttpStatus.TOO_MANY_REQUESTS,
-            );
+            throwRateLimitException(`Too many password reset requests. Please try again in ${comboResult.ttlSeconds} seconds.`);
         }
 
         const ipResult = await this.redisService.checkRateLimit({
-            key: `rate-limit:forgot-password:ip:${normalizedIp}`,
+            key: buildAuthIpRateLimitKey({
+                action: AuthRateLimitAction.ForgotPassword,
+                ipAddress,
+            }),
             maxAttempts: 10,
             windowSeconds: 15 * 60,
         });
 
         if (!ipResult.allowed) {
-            throw new HttpException(
-                {
-                    statusCode: HttpStatus.TOO_MANY_REQUESTS,
-                    message: `Too many password reset requests from this network. Please try again in ${ipResult.ttlSeconds} seconds.`,
-                    error: 'Too Many Requests',
-                },
-                HttpStatus.TOO_MANY_REQUESTS,
-            );
+            throwRateLimitException(`Too many password reset requests from this network. Please try again in ${ipResult.ttlSeconds} seconds.`);
         }
     }
 }
