@@ -13,6 +13,7 @@ import { ChangeAdminPasswordDto } from './dto/change-admin-password.dto';
 import { WalletService } from '../wallet/wallet.service';
 import { ListWithdrawalsQueryDto } from '../wallet/dto/list-withdrawals-query.dto';
 import { RejectWithdrawalDto } from '../wallet/dto/reject-withdrawal.dto';
+import { RejectIdentityDto } from './dto/reject-identity.dto';
 
 
 @Controller('admin')
@@ -83,5 +84,19 @@ export class AdminController {
         @Body() dto: RejectWithdrawalDto,
     ) {
         return this.walletService.rejectWithdrawal(id, currentAdmin.sub, dto);
+    }
+
+    @Post('members/:id/identity/approve')
+    @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+    @AdminRoles(AdminRole.Admin)
+    approveIdentity(@Param('id') id: string) {
+        return this.adminService.approveIdentity(id);
+    }
+
+    @Post('members/:id/identity/reject')
+    @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+    @AdminRoles(AdminRole.Admin)
+    rejectIdentity(@Param('id') id: string, @Body() dto: RejectIdentityDto) {
+        return this.adminService.rejectIdentity(id, dto);
     }
 }
