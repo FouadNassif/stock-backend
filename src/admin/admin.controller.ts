@@ -14,6 +14,7 @@ import { WalletService } from '../wallet/wallet.service';
 import { ListWithdrawalsQueryDto } from '../wallet/dto/list-withdrawals-query.dto';
 import { RejectWithdrawalDto } from '../wallet/dto/reject-withdrawal.dto';
 import { RejectIdentityDto } from './dto/reject-identity.dto';
+import { ListMembersQueryDto } from './dto/list-members-query.dto';
 
 
 @Controller('admin')
@@ -56,6 +57,13 @@ export class AdminController {
     @AdminRoles(AdminRole.Admin)
     listAdmins(@Query() query: ListAdminsQueryDto) {
         return this.adminService.listAdmins(query);
+    }
+
+    @Get('members')
+    @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+    @AdminRoles(AdminRole.Admin, AdminRole.Support)
+    listMembers(@Query() query: ListMembersQueryDto) {
+        return this.adminService.listMembers(query);
     }
 
     @Get('withdrawals')
