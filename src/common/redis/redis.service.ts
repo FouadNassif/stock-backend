@@ -7,6 +7,12 @@ import {
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 
+export type RateLimitResult = {
+    allowed: boolean;
+    attempts: number;
+    remainingAttempts: number;
+    ttlSeconds: number;
+};
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
     private readonly logger = new Logger(RedisService.name);
@@ -132,5 +138,23 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
         if (keysToDelete.length > 0) {
             await this.deleteMany(keysToDelete);
         }
+    }
+
+    async checkRateLimit(params: {
+        key: string;
+        maxAttempts: number;
+        windowSeconds: number;
+    }): Promise<RateLimitResult> {
+        const attempts = await this.increment(params.key, params.windowSeconds);
+        const ttlSeconds = await this.ttl(params.key);
+
+        const remainingAttempts = Math.max(params.maxAttempts - attempts, 0);
+
+        return {
+            allowed: attempts <= params.maxAttempts,
+            attempts,
+            remainingAttempts,
+            ttlSeconds: ttlSeconds > 0 ? ttlSeconds : params.windowSeconds,
+        };
     }
 }

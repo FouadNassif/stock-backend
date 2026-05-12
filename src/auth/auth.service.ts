@@ -2,6 +2,8 @@ import {
     BadRequestException,
     ConflictException,
     ForbiddenException,
+    HttpException,
+    HttpStatus,
     Injectable,
     UnauthorizedException,
 } from '@nestjs/common';
@@ -28,6 +30,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { PasswordResetTokenPayload } from './types/password-reset-token-payload.type';
 import { VerifyResetOtpDto } from './dto/verify-reset-otp.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { RedisService } from 'src/common/redis/redis.service';
 
 @Injectable()
 export class AuthService {
@@ -45,6 +48,7 @@ export class AuthService {
         private readonly configService: ConfigService,
         private readonly notificationsService: NotificationsService,
         private readonly referralsService: ReferralsService,
+        private readonly redisService: RedisService,
     ) { }
 
     async register(
@@ -216,10 +220,14 @@ export class AuthService {
         };
     }
 
-    async login(dto: LoginDto): Promise<{ accessToken: string }> {
+    async login(dto: LoginDto, ipAddress: string,): Promise<{ accessToken: string }> {
         const normalizedEmail = dto.email.toLowerCase();
 
-        const member = await this.memberModel.findOne({ email: normalizedEmail }).exec();
+        await this.loginCheckLimit(normalizedEmail, ipAddress);
+
+        const member = await this.memberModel
+            .findOne({ email: normalizedEmail })
+            .exec();
 
         if (!member || !member.password) {
             throw new UnauthorizedException('Invalid email or password');
@@ -239,6 +247,8 @@ export class AuthService {
             throw new UnauthorizedException('Invalid email or password');
         }
 
+        await this.redisService.delete(`rate-limit:login:${normalizedEmail}`);
+
         const payload: JwtPayload = {
             sub: member._id.toString(),
             email: member.email,
@@ -250,14 +260,15 @@ export class AuthService {
         };
     }
 
-    async forgotPassword(dto: ForgotPasswordDto): Promise<{
+    async forgotPassword(dto: ForgotPasswordDto, ipAddress: string): Promise<{
         verificationId?: string;
         message: string;
     }> {
         const normalizedEmail = dto.email.toLowerCase();
 
-        const genericMessage =
-            'If this email exists, a password reset OTP has been sent.';
+        await this.forgetPasswordCheckLimit(normalizedEmail, ipAddress);
+
+        const genericMessage = 'If this email exists, a password reset OTP has been sent.';
 
         const member = await this.memberModel
             .findOne({ email: normalizedEmail })
@@ -285,8 +296,7 @@ export class AuthService {
         const codeHash = await bcrypt.hash(code, 10);
         const verificationId = randomUUID();
 
-        const otpExpiresMinutes =
-            this.configService.get<number>('OTP_EXPIRES_MINUTES') ?? 10;
+        const otpExpiresMinutes = this.configService.get<number>('OTP_EXPIRES_MINUTES') ?? 10;
 
         const expiresAt = new Date(Date.now() + otpExpiresMinutes * 60 * 1000);
 
@@ -484,5 +494,86 @@ export class AuthService {
         }
 
         throw new BadRequestException('Could not generate referral code');
+    }
+
+    private normalizeIp(ipAddress: string): string {
+        return ipAddress.replace(/:/g, '_');
+    }
+
+    private async loginCheckLimit(email: string, ipAddress: string): Promise<void> {
+        const normalizedIp = this.normalizeIp(ipAddress);
+
+        const comboResult = await this.redisService.checkRateLimit({
+            key: `rate-limit:login:combo:${normalizedIp}:${email}`,
+            maxAttempts: 5,
+            windowSeconds: 15 * 60,
+        });
+
+        if (!comboResult.allowed) {
+            throw new HttpException(
+                {
+                    statusCode: HttpStatus.TOO_MANY_REQUESTS,
+                    message: `Too many login attempts. Please try again in ${comboResult.ttlSeconds} seconds.`,
+                    error: 'Too Many Requests',
+                },
+                HttpStatus.TOO_MANY_REQUESTS,
+            );
+        }
+
+        const ipResult = await this.redisService.checkRateLimit({
+            key: `rate-limit:login:ip:${normalizedIp}`,
+            maxAttempts: 20,
+            windowSeconds: 15 * 60,
+        });
+
+        if (!ipResult.allowed) {
+            throw new HttpException(
+                {
+                    statusCode: HttpStatus.TOO_MANY_REQUESTS,
+                    message: `Too many login attempts from this network. Please try again in ${ipResult.ttlSeconds} seconds.`,
+                    error: 'Too Many Requests',
+                },
+                HttpStatus.TOO_MANY_REQUESTS,
+            );
+        }
+    }
+
+
+    private async forgetPasswordCheckLimit(email: string, ipAddress: string): Promise<void> {
+        const normalizedIp = this.normalizeIp(ipAddress);
+
+        const comboResult = await this.redisService.checkRateLimit({
+            key: `rate-limit:forgot-password:combo:${normalizedIp}:${email}`,
+            maxAttempts: 3,
+            windowSeconds: 15 * 60,
+        });
+
+        if (!comboResult.allowed) {
+            throw new HttpException(
+                {
+                    statusCode: HttpStatus.TOO_MANY_REQUESTS,
+                    message: `Too many password reset requests. Please try again in ${comboResult.ttlSeconds} seconds.`,
+                    error: 'Too Many Requests',
+                },
+                HttpStatus.TOO_MANY_REQUESTS,
+            );
+        }
+
+        const ipResult = await this.redisService.checkRateLimit({
+            key: `rate-limit:forgot-password:ip:${normalizedIp}`,
+            maxAttempts: 10,
+            windowSeconds: 15 * 60,
+        });
+
+        if (!ipResult.allowed) {
+            throw new HttpException(
+                {
+                    statusCode: HttpStatus.TOO_MANY_REQUESTS,
+                    message: `Too many password reset requests from this network. Please try again in ${ipResult.ttlSeconds} seconds.`,
+                    error: 'Too Many Requests',
+                },
+                HttpStatus.TOO_MANY_REQUESTS,
+            );
+        }
     }
 }
