@@ -1,6 +1,9 @@
 export enum AuthRateLimitAction {
     Login = 'login',
     ForgotPassword = 'forgot-password',
+    Register = 'register',
+    VerifyOtp = 'verify-otp',
+    ResendOtp = 'resend-otp',
 }
 
 export function normalizeIp(ipAddress: string): string {
@@ -9,12 +12,12 @@ export function normalizeIp(ipAddress: string): string {
 
 export function buildAuthComboRateLimitKey(params: {
     action: AuthRateLimitAction;
-    email: string;
+    target: string;
     ipAddress: string;
 }): string {
     const normalizedIp = normalizeIp(params.ipAddress);
 
-    return `rate-limit:${params.action}:combo:${normalizedIp}:${params.email}`;
+    return `rate-limit:${params.action}:combo:${normalizedIp}:${params.target}`;
 }
 
 export function buildAuthIpRateLimitKey(params: {

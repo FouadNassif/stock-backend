@@ -2,8 +2,6 @@ import {
     BadRequestException,
     ConflictException,
     ForbiddenException,
-    HttpException,
-    HttpStatus,
     Injectable,
     UnauthorizedException,
 } from '@nestjs/common';
@@ -34,6 +32,7 @@ import { RedisService } from 'src/common/redis/redis.service';
 import { AuthRateLimitAction, buildAuthComboRateLimitKey, buildAuthIpRateLimitKey } from './utils/auth-rate-limit.util';
 import { throwRateLimitException } from 'src/common/exceptions/rate-limit.exception';
 
+
 @Injectable()
 export class AuthService {
     constructor(
@@ -53,11 +52,20 @@ export class AuthService {
         private readonly redisService: RedisService,
     ) { }
 
-    async register(
-        dto: RegisterDto,
-        referralCode?: string,
-    ): Promise<{ memberId: string; verificationId: string; message: string }> {
+    async register(dto: RegisterDto, referralCode: string | undefined, ipAddress: string): Promise<{ memberId: string; verificationId: string; message: string }> {
         const normalizedEmail = dto.email.toLowerCase();
+
+        await this.redisRateCheckLimit(
+            normalizedEmail,
+            ipAddress,
+            AuthRateLimitAction.Register,
+            {
+                stage1Limit: this.configService.getOrThrow<number>('RATE_REGISTER_STAGE1_LIMIT'),
+                stage1Time: this.configService.getOrThrow<number>('RATE_REGISTER_STAGE1_TIME'),
+                stage2Limit: this.configService.getOrThrow<number>('RATE_REGISTER_STAGE2_LIMIT'),
+                stage2Time: this.configService.getOrThrow<number>('RATE_REGISTER_STAGE2_TIME'),
+            },
+        );
 
         const existingMember = await this.memberModel
             .findOne({
@@ -104,7 +112,19 @@ export class AuthService {
         };
     }
 
-    async verifyOtp(dto: VerifyOtpDto): Promise<{ message: string }> {
+    async verifyOtp(dto: VerifyOtpDto, ipAddress: string): Promise<{ message: string }> {
+        await this.redisRateCheckLimit(
+            dto.verificationId,
+            ipAddress,
+            AuthRateLimitAction.VerifyOtp,
+            {
+                stage1Limit: this.configService.getOrThrow<number>('RATE_V_OTP_STAGE1_LIMIT'),
+                stage1Time: this.configService.getOrThrow<number>('RATE_V_OTP_STAGE1_TIME'),
+                stage2Limit: this.configService.getOrThrow<number>('RATE_V_OTP_STAGE2_LIMIT'),
+                stage2Time: this.configService.getOrThrow<number>('RATE_V_OTP_STAGE2_TIME'),
+            },
+        );
+
         const otp = await this.otpModel
             .findOne({
                 verificationId: dto.verificationId,
@@ -164,9 +184,18 @@ export class AuthService {
         };
     }
 
-    async resendOtp(
-        dto: ResendOtpDto,
-    ): Promise<{ verificationId: string; message: string }> {
+    async resendOtp(dto: ResendOtpDto, ipAddress: string): Promise<{ verificationId: string; message: string }> {
+        await this.redisRateCheckLimit(
+            dto.verificationId,
+            ipAddress,
+            AuthRateLimitAction.ResendOtp,
+            {
+                stage1Limit: this.configService.getOrThrow<number>('RATE_R_OTP_STAGE1_LIMIT'),
+                stage1Time: this.configService.getOrThrow<number>('RATE_R_OTP_STAGE1_TIME'),
+                stage2Limit: this.configService.getOrThrow<number>('RATE_R_OTP_STAGE2_LIMIT'),
+                stage2Time: this.configService.getOrThrow<number>('RATE_R_OTP_STAGE2_TIME'),
+            },
+        );
         const oldOtp = await this.otpModel
             .findOne({
                 verificationId: dto.verificationId,
@@ -225,7 +254,17 @@ export class AuthService {
     async login(dto: LoginDto, ipAddress: string,): Promise<{ accessToken: string }> {
         const normalizedEmail = dto.email.toLowerCase();
 
-        await this.loginCheckLimit(normalizedEmail, ipAddress);
+        await this.redisRateCheckLimit(
+            normalizedEmail,
+            ipAddress,
+            AuthRateLimitAction.Login,
+            {
+                stage1Limit: this.configService.getOrThrow<number>('RATE_LOGIN_STAGE1_LIMIT'),
+                stage1Time: this.configService.getOrThrow<number>('RATE_LOGIN_STAGE1_TIME'),
+                stage2Limit: this.configService.getOrThrow<number>('RATE_LOGIN_STAGE2_LIMIT'),
+                stage2Time: this.configService.getOrThrow<number>('RATE_LOGIN_STAGE2_TIME'),
+            },
+        );
 
         const member = await this.memberModel
             .findOne({ email: normalizedEmail })
@@ -249,7 +288,13 @@ export class AuthService {
             throw new UnauthorizedException('Invalid email or password');
         }
 
-        await this.redisService.delete(`rate-limit:login:${normalizedEmail}`);
+        await this.redisService.delete(
+            buildAuthComboRateLimitKey({
+                action: AuthRateLimitAction.Login,
+                target: normalizedEmail,
+                ipAddress,
+            }),
+        );
 
         const payload: JwtPayload = {
             sub: member._id.toString(),
@@ -268,7 +313,17 @@ export class AuthService {
     }> {
         const normalizedEmail = dto.email.toLowerCase();
 
-        await this.forgetPasswordCheckLimit(normalizedEmail, ipAddress);
+        await this.redisRateCheckLimit(
+            normalizedEmail,
+            ipAddress,
+            AuthRateLimitAction.ForgotPassword,
+            {
+                stage1Limit: this.configService.getOrThrow<number>('RATE_FORGET_STAGE1_LIMIT'),
+                stage1Time: this.configService.getOrThrow<number>('RATE_FORGET_STAGE1_TIME'),
+                stage2Limit: this.configService.getOrThrow<number>('RATE_FORGET_STAGE2_LIMIT'),
+                stage2Time: this.configService.getOrThrow<number>('RATE_FORGET_STAGE2_TIME'),
+            },
+        );
 
         const genericMessage = 'If this email exists, a password reset OTP has been sent.';
 
@@ -498,61 +553,42 @@ export class AuthService {
         throw new BadRequestException('Could not generate referral code');
     }
 
-    private async loginCheckLimit(email: string, ipAddress: string): Promise<void> {
+    private async redisRateCheckLimit(
+        target: string,
+        ipAddress: string,
+        action: AuthRateLimitAction,
+        config: {
+            stage1Limit: number;
+            stage1Time: number;
+            stage2Limit: number;
+            stage2Time: number;
+        },
+    ): Promise<void> {
         const comboResult = await this.redisService.checkRateLimit({
             key: buildAuthComboRateLimitKey({
-                action: AuthRateLimitAction.Login,
-                email,
+                action,
+                target,
                 ipAddress,
             }),
-            maxAttempts: 5,
-            windowSeconds: 15 * 60,
+            maxAttempts: config.stage1Limit,
+            windowSeconds: config.stage1Time,
         });
 
         if (!comboResult.allowed) {
-            throwRateLimitException(`Too many login attempts. Please try again in ${comboResult.ttlSeconds} seconds.`);
+            throwRateLimitException(`Too many requests. Please try again in ${comboResult.ttlSeconds} seconds.`);
         }
 
         const ipResult = await this.redisService.checkRateLimit({
             key: buildAuthIpRateLimitKey({
-                action: AuthRateLimitAction.Login,
+                action,
                 ipAddress,
             }),
-            maxAttempts: 20,
-            windowSeconds: 15 * 60,
+            maxAttempts: config.stage2Limit,
+            windowSeconds: config.stage2Time,
         });
 
         if (!ipResult.allowed) {
-            throwRateLimitException(`Too many login attempts from this network. Please try again in ${ipResult.ttlSeconds} seconds.`);
-        }
-    }
-
-    private async forgetPasswordCheckLimit(email: string, ipAddress: string): Promise<void> {
-        const comboResult = await this.redisService.checkRateLimit({
-            key: buildAuthComboRateLimitKey({
-                action: AuthRateLimitAction.ForgotPassword,
-                email,
-                ipAddress,
-            }),
-            maxAttempts: 3,
-            windowSeconds: 15 * 60,
-        });
-
-        if (!comboResult.allowed) {
-            throwRateLimitException(`Too many password reset requests. Please try again in ${comboResult.ttlSeconds} seconds.`);
-        }
-
-        const ipResult = await this.redisService.checkRateLimit({
-            key: buildAuthIpRateLimitKey({
-                action: AuthRateLimitAction.ForgotPassword,
-                ipAddress,
-            }),
-            maxAttempts: 10,
-            windowSeconds: 15 * 60,
-        });
-
-        if (!ipResult.allowed) {
-            throwRateLimitException(`Too many password reset requests from this network. Please try again in ${ipResult.ttlSeconds} seconds.`);
+            throwRateLimitException(`Too many attempts from this network. Please try again in ${ipResult.ttlSeconds} seconds.`);
         }
     }
 }

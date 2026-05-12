@@ -24,4 +24,29 @@ export const envValidationSchema = Joi.object({
 
     REDIS_HOST: Joi.string().required(),
     REDIS_PORT: Joi.string().required(),
+
+    RATE_LOGIN_STAGE1_LIMIT: Joi.number().integer().min(1).default(5),
+    RATE_LOGIN_STAGE1_TIME: Joi.number().integer().min(1).default(900),
+    RATE_LOGIN_STAGE2_LIMIT: Joi.number().integer().min(1).default(20),
+    RATE_LOGIN_STAGE2_TIME: Joi.number().integer().min(1).default(900),
+
+    RATE_FORGET_STAGE1_LIMIT: Joi.number().integer().min(1).default(3),
+    RATE_FORGET_STAGE1_TIME: Joi.number().integer().min(1).default(900),
+    RATE_FORGET_STAGE2_LIMIT: Joi.number().integer().min(1).default(10),
+    RATE_FORGET_STAGE2_TIME: Joi.number().integer().min(1).default(900),
+
+    RATE_REGISTER_STAGE1_LIMIT: Joi.number().integer().min(1).default(3),
+    RATE_REGISTER_STAGE1_TIME: Joi.number().integer().min(1).default(900),
+    RATE_REGISTER_STAGE2_LIMIT: Joi.number().integer().min(1).default(10),
+    RATE_REGISTER_STAGE2_TIME: Joi.number().integer().min(1).default(900),
+
+    RATE_V_OTP_STAGE1_LIMIT: Joi.number().integer().min(1).default(5),
+    RATE_V_OTP_STAGE1_TIME: Joi.number().integer().min(1).default(900),
+    RATE_V_OTP_STAGE2_LIMIT: Joi.number().integer().min(1).default(20),
+    RATE_V_OTP_STAGE2_TIME: Joi.number().integer().min(1).default(900),
+
+    RATE_R_OTP_STAGE1_LIMIT: Joi.number().integer().min(1).default(3),
+    RATE_R_OTP_STAGE1_TIME: Joi.number().integer().min(1).default(900),
+    RATE_R_OTP_STAGE2_LIMIT: Joi.number().integer().min(1).default(10),
+    RATE_R_OTP_STAGE2_TIME: Joi.number().integer().min(1).default(900),
 });
