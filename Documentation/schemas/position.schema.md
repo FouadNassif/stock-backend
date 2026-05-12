@@ -35,7 +35,18 @@ memberId + status, memberId + stockId + status, stockId
 ## Example Document
 
 ```json
-{"sharesHeld":5,"avgPurchasePrice":100,"status":"open"}
+{
+  "_id": "6a024b3c692924cd79875ef1",
+  "memberId":"6a02492e692924cd79875ee9",
+  "stockId": "6a024b09692924cd79875eee",
+  "sharesHeld": 0,
+  "avgPurchasePrice": 182.5,
+  "status": "closed",
+  "openedAt": "2026-05-11T21:33:48.954Z",
+  "createdAt": "2026-05-11T21:33:48.955Z",
+  "updatedAt":"2026-05-11T21:38:47.930Z",
+  "closedAt": "2026-05-11T21:38:47.930Z"
+}
 ```
 
 ## Design Notes

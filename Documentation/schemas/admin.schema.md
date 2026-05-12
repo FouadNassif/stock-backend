@@ -16,7 +16,7 @@ Stores internal platform users.
 |---|---|---:|---|
 | fullName | string | Yes | Admin full name |
 | email | string | Yes | Unique login email |
-| password/passwordHash | string | Yes | Hashed password field depending on implementation |
+| password | string | Yes | Hashed password field depending on implementation |
 | role | enum | Yes | Admin role |
 | isActive | boolean | Yes | Account active status |
 | mustChangePassword | boolean | Yes | Temporary password flag |
@@ -36,9 +36,24 @@ email unique, role, isActive, createdAt
 ## Example Document
 
 ```json
-{"fullName":"Leila Analyst","email":"leila.analyst@example.com","role":"analyst","mustChangePassword":true}
+{
+  "_id": ObjectId("6a024a9a692924cd79875eed"),
+  "fullName": "Leila",
+  "email": "fouad.nassif@isae.edu.lb",
+  "password": "Password Hassh",
+  "role": "analyst",
+  "isActive": true,
+  "mustChangePassword": false,
+  "createdBy": "6a0248bd692924cd79875ee8",
+  "createdAt":"2026-05-11T21:31:06.659Z",
+  "updatedAt": "2026-05-11T21:32:29.194Z",
+  "lastLoginAt": "2026-05-11T21:32:29.194Z",
+}
 ```
 
 ## Design Notes
 
-Admin emails must also be unique against member emails. Admin users are separate from public members.
+
+
+- Admin emails must also be unique against member emails. 
+- Admin users are separate from public members.

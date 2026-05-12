@@ -18,7 +18,7 @@ Stores public investor/member accounts.
 | email | string | Yes | Unique lowercase email |
 | nationalId | string | Yes | Unique national ID |
 | dateOfBirth | Date | Yes | Used for age validation |
-| passwordHash | string | No | Hashed password after verification |
+| password | string | No | Hashed password after verification |
 | emailVerified | boolean | Yes | Email verification status |
 | identityStatus | enum | Yes | Identity/KYC status |
 | isActive | boolean | Yes | Suspension status |
@@ -39,9 +39,24 @@ email unique, nationalId unique, referralCode unique, emailVerified, isActive, i
 ## Example Document
 
 ```json
-{"fullName":"Adam Investor","email":"adam@example.com","walletBalance":1000,"emailVerified":true,"referralCode":"ADAM123456"}
+{
+  "_id": ObjectId("6a02492e692924cd79875ee9"),
+  "fullName": "Fouad Nassif",
+  "email": "a52fouad@gmail.com",
+  "nationalId": "NAT-200527011298",
+  "dateOfBirth": "2005-01-27T00:00:00.000Z",
+  "emailVerified": true,
+  "referralCode": "FOUA7136",
+  "identityStatus": "pending",
+  "isActive": true,
+  "walletBalance": 717,
+  "createdAt": "2026-05-11T21:25:02.126Z",
+  "updatedAt": "2026-05-11T22:43:19.094Z",
+  "password": "PasswordHash",
+  "lastDepositAt": "2026-05-11T21:33:08.519Z",
+}
 ```
 
 ## Design Notes
 
-Member emails must also be unique against admin emails. Member passwords are stored as bcrypt hashes only.
+- Member emails must also be unique against admin emails.

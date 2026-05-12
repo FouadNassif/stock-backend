@@ -31,7 +31,14 @@ stockId + recordedAt
 ## Example Document
 
 ```json
-{"stockId":"665f...","price":185.75,"recordedAt":"2026-05-09T00:00:00.000Z"}
+{
+  "_id": "6a024b09692924cd79875eef",
+  "stockId": "6a024b09692924cd79875eee",
+  "price": 182.5,
+  "recordedAt": "2026-05-11T21:32:57.785Z",
+  "createdAt": "2026-05-11T21:32:57.785Z",
+  "updatedAt": "2026-05-11T21:32:57.785Z",
+}
 ```
 
 ## Design Notes

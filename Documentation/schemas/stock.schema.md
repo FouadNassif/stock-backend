@@ -34,7 +34,17 @@ ticker unique, sector, isListed, companyName
 ## Example Document
 
 ```json
-{"ticker":"AAPL","companyName":"Apple Inc.","sector":"Technology","currentPrice":182.5,"isListed":true}
+{
+  "_id":"6a024b09692924cd79875eee",
+  "ticker": "AAPL",
+  "companyName": "Apple Inc.",
+  "sector": "Technology",
+  "description": "Apple Inc. designs and sells consumer electronics, software, and services.",
+  "currentPrice": 12,
+  "isListed": true,
+  "createdAt": "2026-05-11T21:32:57.769Z",
+  "updatedAt": "2026-05-11T21:38:22.963Z",
+}
 ```
 
 ## Design Notes

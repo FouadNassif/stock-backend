@@ -10,33 +10,15 @@ Final file path:
 Documentation/postman/stock-market-platform.postman_collection.json
 ```
 
-## Required Folder Structure
 
-```txt
-Stock Market Platform
-  Member Auth
-  Members
-  Admin Auth
-  Admin Users
-  Stocks
-  Wallet
-  Admin Withdrawals
-  Orders
-  Alerts
-  Admin Members
-  Analytics
-```
-
-## Current Completed Folders
+## Current Folders
 
 ```txt
 Member Auth
-Members
 Admin Auth
 Admin Users
 Stocks
 Wallet
-Admin Withdrawals
 Orders
 ```
 
@@ -45,8 +27,9 @@ Orders
 Every request should have:
 
 ```txt
-1 success example
-1 error example
+Success Examples
+Filter Examples
+Error Examples
 ```
 
 ## Requests To Include
@@ -58,59 +41,50 @@ Every request should have:
 - Verify OTP
 - Resend OTP
 - Set Password
-- Login
+- Member Login
+- Change Password
 - Forgot Password
 - Verify Reset OTP
 - Reset Password
-
-### Members
-
-- Get Me
-- Change Password
+- Member Informations
 
 ### Admin Auth
 
 - Admin Login
-- Admin Change Password
+- Analyst Login
+- Support Login
+- Change Password
 
 ### Admin Users
 
-- Create Admin User
+- Create New Admin User
 - List Admin Users
 
 ### Stocks
 
-- Create Stock
 - List Stocks
-- Get Stock By ID
-- Get Stock History
+- List Stock By Ticker
+- List Stock History By Ticker
+- Create Stock
 - Update Stock
 - Delist Stock
 
 ### Wallet
 
-- Deposit
-- Withdraw
-- Get Balance
-- List Transactions
-
-### Admin Withdrawals
-
-- List Withdrawals
-- Approve Withdrawal
-- Reject Withdrawal
+- Member
+  -  Deposit
+  -  Get Balance
+  -  List Transactions
+  -  Withdraws
+- Admin
+  - List Withdrawals
+  - Approve Withdrawal 
+  - Reject Withdrawal
 
 ### Orders
 
-- Buy Stock
-- Sell Stock
-- Get Portfolio
-- Get Order History
+- Buy
+- Sell
+- Portfolio
+- History
 
-## How To Save Examples
-
-1. Send the request.
-2. Click `Save Response`.
-3. Choose `Save as example`.
-4. Name the example clearly.
-5. Save it inside the correct request.

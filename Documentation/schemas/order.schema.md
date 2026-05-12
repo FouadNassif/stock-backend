@@ -39,7 +39,20 @@ memberId + createdAt, memberId + type, stockId, status
 ## Example Document
 
 ```json
-{"type":"buy","quantity":5,"priceAtExecution":100,"totalAmount":500,"status":"completed","realizedProfitLoss":0}
+{
+  "_id": ObjectId("6a024b3c692924cd79875ef2"),
+  "memberId":"6a02492e692924cd79875ee9",
+  "stockId": "6a024b09692924cd79875eee",
+  "positionId":"6a024b3c692924cd79875ef1",
+  "type": "buy",
+  "quantity": 2,
+  "priceAtExecution": 182.5,
+  "totalAmount": 365,
+  "status": "completed",
+  "realizedProfitLoss": 0,
+  "createdAt":"2026-05-11T21:33:48.959Z",
+  "updatedAt":"2026-05-11T21:33:48.959Z",
+}
 ```
 
 ## Design Notes

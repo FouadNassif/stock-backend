@@ -26,6 +26,7 @@ The Auth module handles public member onboarding, login, OTP verification, refer
 | POST | `/api/auth/resend-otp` | Resend OTP |
 | POST | `/api/auth/set-password` | Set password after OTP verification |
 | POST | `/api/auth/login` | Member login |
+| POST | `/api/auth/change-password` | Request changing Password |
 | POST | `/api/auth/forgot-password` | Request password reset OTP |
 | POST | `/api/auth/verify-reset-otp` | Verify password reset OTP |
 | POST | `/api/auth/reset-password` | Reset password using reset token |

@@ -40,7 +40,20 @@ memberId + createdAt, memberId + type, status, type, referenceId unique
 ## Example Document
 
 ```json
-{"type":"buy","amount":500,"status":"completed","balanceBefore":1000,"balanceAfter":500}
+{
+  "_id": "6a024b14692924cd79875ef0",
+  "memberId": "6a02492e692924cd79875ee9",
+  "type": "deposit",
+  "amount": 550,
+  "status": "completed",
+  "referenceId": "DEPOSIT-a875ac2f-bba9-4e3b-8c6f-aa2c194b47e2",
+  "notes": "Deposit simulated as successful payment",
+  "balanceBefore": 0,
+  "balanceAfter": 550,
+  "createdAt":"2026-05-11T21:33:08.501Z",
+  "updatedAt": "2026-05-11T21:33:08.525Z",
+  "processedAt":"2026-05-11T21:33:08.525Z"
+}
 ```
 
 ## Design Notes
