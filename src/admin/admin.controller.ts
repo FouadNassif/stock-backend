@@ -15,6 +15,7 @@ import { ListWithdrawalsQueryDto } from '../wallet/dto/list-withdrawals-query.dt
 import { RejectWithdrawalDto } from '../wallet/dto/reject-withdrawal.dto';
 import { RejectIdentityDto } from './dto/reject-identity.dto';
 import { ListMembersQueryDto } from './dto/list-members-query.dto';
+import { ObjectIdPipe } from 'src/common/pipes/object-id.pipe';
 
 
 @Controller('admin')
@@ -77,7 +78,7 @@ export class AdminController {
     @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
     @AdminRoles(AdminRole.Admin)
     approveWithdrawal(
-        @Param('id') id: string,
+        @Param('id', ObjectIdPipe) id: string,
         @CurrentAdmin() currentAdmin: AdminJwtPayload,
     ) {
         return this.walletService.approveWithdrawal(id, currentAdmin.sub);
@@ -87,7 +88,7 @@ export class AdminController {
     @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
     @AdminRoles(AdminRole.Admin)
     rejectWithdrawal(
-        @Param('id') id: string,
+        @Param('id', ObjectIdPipe) id: string,
         @CurrentAdmin() currentAdmin: AdminJwtPayload,
         @Body() dto: RejectWithdrawalDto,
     ) {
@@ -97,14 +98,14 @@ export class AdminController {
     @Post('members/:id/identity/approve')
     @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
     @AdminRoles(AdminRole.Admin)
-    approveIdentity(@Param('id') id: string) {
+    approveIdentity(@Param('id', ObjectIdPipe) id: string,) {
         return this.adminService.approveIdentity(id);
     }
 
     @Post('members/:id/identity/reject')
     @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
     @AdminRoles(AdminRole.Admin)
-    rejectIdentity(@Param('id') id: string, @Body() dto: RejectIdentityDto) {
+    rejectIdentity(@Param('id', ObjectIdPipe) id: string, @Body() dto: RejectIdentityDto) {
         return this.adminService.rejectIdentity(id, dto);
     }
 }

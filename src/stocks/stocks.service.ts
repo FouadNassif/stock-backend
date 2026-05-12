@@ -175,7 +175,6 @@ export class StocksService {
         currentAdminId: string,
         dto: UpdateStockDto,
     ): Promise<{ message: string; stock: StockResponse }> {
-        this.validateObjectId(id);
 
 
         if (!dto.companyName && !dto.sector && dto.currentPrice === undefined && !dto.description) {
@@ -227,7 +226,6 @@ export class StocksService {
         message: string;
         stock: StockResponse;
     }> {
-        this.validateObjectId(id);
 
         const stock = await this.stockModel.findById(id).exec();
 
@@ -256,11 +254,5 @@ export class StocksService {
             createdAt: stock.createdAt,
             updatedAt: stock.updatedAt,
         };
-    }
-
-    private validateObjectId(id: string): void {
-        if (!Types.ObjectId.isValid(id)) {
-            throw new NotFoundException('Stock not found');
-        }
     }
 }
