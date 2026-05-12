@@ -152,7 +152,7 @@ export class OrdersService {
             await session.withTransaction(async () => {
                 const member = await this.memberModel.findById(currentMemberId).session(session).exec();
 
-                const eligibleMember = checkMemberEligibility(member);
+                const eligibleMember = checkMemberEligibility(member, true);
 
                 const stock = await this.stockModel.findById(dto.stockId).session(session).exec();
 
@@ -315,7 +315,7 @@ export class OrdersService {
                     .session(session)
                     .exec();
 
-                const eligibleMember = checkMemberEligibility(member);
+                const eligibleMember = checkMemberEligibility(member, true);
 
                 const stock = await this.stockModel
                     .findById(dto.stockId)

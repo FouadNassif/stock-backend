@@ -3,6 +3,8 @@ import {
     OnModuleInit,
     ConflictException,
     UnauthorizedException,
+    NotFoundException,
+    BadRequestException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -23,7 +25,8 @@ import { generateTemporaryPassword } from '../common/utils/password.util';
 
 import { ListAdminsQueryDto } from './dto/list-admins-query.dto';
 import { ChangeAdminPasswordDto } from './dto/change-admin-password.dto';
-import { Member, MemberDocument } from '../members/schemas/member.schema';
+import { IdentityStatus, Member, MemberDocument } from '../members/schemas/member.schema';
+import { RejectIdentityDto } from './dto/reject-identity.dto';
 
 type AdminListFilter = {
     role?: AdminRole;
@@ -250,25 +253,66 @@ export class AdminService implements OnModuleInit {
         };
     }
 
-    private async seedDefaultAdmin(): Promise<void> {
-        const adminEmail = this.configService
-            .getOrThrow<string>('ADMIN_EMAIL')
-            .toLowerCase();
+    async approveIdentity(memberId: string): Promise<{ message: string }> {
+        const member = await this.memberModel.findById(memberId).exec();
 
-        const existingAdmin = await this.adminModel
-            .findOne({ email: adminEmail })
-            .exec();
+        if (!member) {
+            throw new NotFoundException('Member not found');
+        }
+
+        if (member.identityStatus === IdentityStatus.Approved) {
+            throw new BadRequestException('Identity is already approved');
+        }
+
+        member.identityStatus = IdentityStatus.Approved;
+        await member.save();
+
+        await this.notificationsService.sendIdentityApprovedEmail(
+            member.email,
+            member.fullName,
+        );
+
+        return {
+            message: 'Identity approved successfully',
+        };
+    }
+
+    async rejectIdentity(memberId: string, dto: RejectIdentityDto): Promise<{ message: string }> {
+        const member = await this.memberModel.findById(memberId).exec();
+
+        if (!member) {
+            throw new NotFoundException('Member not found');
+        }
+
+        if (member.identityStatus === IdentityStatus.Rejected) {
+            throw new BadRequestException('Identity is already rejected');
+        }
+
+        member.identityStatus = IdentityStatus.Rejected;
+        await member.save();
+
+        await this.notificationsService.sendIdentityRejectedEmail(
+            member.email,
+            member.fullName,
+            dto.reason,
+        );
+
+        return {
+            message: 'Identity rejected successfully',
+        };
+    }
+
+    private async seedDefaultAdmin(): Promise<void> {
+        const adminEmail = this.configService.getOrThrow<string>('ADMIN_EMAIL').toLowerCase();
+
+        const existingAdmin = await this.adminModel.findOne({ email: adminEmail }).exec();
 
         if (existingAdmin) {
             return;
         }
 
-        const adminPassword =
-            this.configService.getOrThrow<string>('ADMIN_PASSWORD');
-
-        const adminFullName =
-            this.configService.getOrThrow<string>('ADMIN_FULL_NAME');
-
+        const adminPassword = this.configService.getOrThrow<string>('ADMIN_PASSWORD');
+        const adminFullName = this.configService.getOrThrow<string>('ADMIN_FULL_NAME');
         const password = await bcrypt.hash(adminPassword, 10);
 
         await this.adminModel.create({

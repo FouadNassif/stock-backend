@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
 import { buildOtpEmailTemplate, buildPasswordResetOtpEmailTemplate } from './templates/otp.template';
-import { buildNewAdminEmailTemplate } from './templates/admin.template';
+import { buildIdentityApprovedEmailTemplate, buildIdentityRejectedEmailTemplate, buildNewAdminEmailTemplate } from './templates/admin.template';
 import { buildWalletCreditEmailTemplate, buildWithdrawalApprovedEmailTemplate, buildWithdrawalRejectedEmailTemplate } from './templates/transaction.template';
 import { buildTradeConfirmationEmailTemplate } from './templates/order.template';
 
@@ -144,6 +144,38 @@ export class NotificationsService {
         fullName,
         code,
       }),
+    });
+  }
+
+
+  async sendIdentityApprovedEmail(
+    email: string,
+    fullName: string,
+  ): Promise<void> {
+    const from = this.configService.getOrThrow<string>('MAIL_FROM');
+
+    await this.transporter.sendMail({
+      from,
+      to: email,
+      subject: 'Identity Verification Approved',
+      text: `Dear ${fullName}, your identity verification has been approved. You can now continue using the platform features that require verified identity.`,
+      html: buildIdentityApprovedEmailTemplate({ fullName }),
+    });
+  }
+
+  async sendIdentityRejectedEmail(
+    email: string,
+    fullName: string,
+    reason: string,
+  ): Promise<void> {
+    const from = this.configService.getOrThrow<string>('MAIL_FROM');
+
+    await this.transporter.sendMail({
+      from,
+      to: email,
+      subject: 'Identity Verification Rejected',
+      text: `Dear ${fullName}, your identity verification has been rejected. Reason: ${reason}`,
+      html: buildIdentityRejectedEmailTemplate({ fullName, reason }),
     });
   }
 

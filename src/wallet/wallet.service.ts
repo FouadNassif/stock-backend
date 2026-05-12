@@ -84,7 +84,7 @@ export class WalletService {
         transaction: TransactionResponse;
     }> {
         const member = await this.memberModel.findById(currentMemberId).exec();
-        const eligibleMember = checkMemberEligibility(member);
+        const eligibleMember = checkMemberEligibility(member, true);
 
         const balanceBefore = eligibleMember.walletBalance;
         const balanceAfter = balanceBefore + dto.amount;
@@ -132,7 +132,7 @@ export class WalletService {
         transaction: TransactionResponse;
     }> {
         const member = await this.memberModel.findById(currentMemberId).exec();
-        const eligibleMember = checkMemberEligibility(member);
+        const eligibleMember = checkMemberEligibility(member, true);
 
         const pendingWithdrawalAmount = await this.getPendingWithdrawalAmount(eligibleMember._id);
 
@@ -409,7 +409,7 @@ export class WalletService {
         }
 
         const member = await this.memberModel.findById(withdrawal.memberId).exec();
-        const eligibleMember = checkMemberEligibility(member);
+        const eligibleMember = checkMemberEligibility(member, true);
 
         const pendingWithdrawalAmount = await this.getPendingWithdrawalAmount(
             eligibleMember._id,
@@ -481,7 +481,7 @@ export class WalletService {
         }
 
         const member = await this.memberModel.findById(withdrawal.memberId).exec();
-        const eligibleMember = checkMemberEligibility(member);
+        const eligibleMember = checkMemberEligibility(member, true);
 
         withdrawal.status = TransactionStatus.Rejected;
         withdrawal.rejectedReason = dto.reason;
