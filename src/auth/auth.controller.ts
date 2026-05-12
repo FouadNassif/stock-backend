@@ -1,5 +1,5 @@
-import { Body, Controller, Post, Query } from '@nestjs/common';
-
+import { Body, Controller, Post, Query, Req } from '@nestjs/common';
+import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -41,24 +41,20 @@ export class AuthController {
     }
 
     @Post('login')
-    login(@Body() dto: LoginDto): Promise<{ accessToken: string }> {
-        return this.authService.login(dto);
+    login(@Body() dto: LoginDto, @Req() req: Request): Promise<{ accessToken: string }> {
+        return this.authService.login(dto, this.getRequestIp(req));
     }
 
     @Post('forgot-password')
-    forgotPassword(
-        @Body() dto: ForgotPasswordDto,
-    ): Promise<{
+    forgotPassword(@Body() dto: ForgotPasswordDto, @Req() req: Request): Promise<{
         verificationId?: string;
         message: string;
     }> {
-        return this.authService.forgotPassword(dto);
+        return this.authService.forgotPassword(dto, this.getRequestIp(req));
     }
 
     @Post('verify-reset-otp')
-    verifyResetOtp(
-        @Body() dto: VerifyResetOtpDto,
-    ): Promise<{
+    verifyResetOtp(@Body() dto: VerifyResetOtpDto): Promise<{
         resetToken: string;
         message: string;
     }> {
@@ -66,9 +62,16 @@ export class AuthController {
     }
 
     @Post('reset-password')
-    resetPassword(
-        @Body() dto: ResetPasswordDto,
-    ): Promise<{ message: string }> {
+    resetPassword(@Body() dto: ResetPasswordDto): Promise<{ message: string }> {
         return this.authService.resetPassword(dto);
+    }
+
+    private getRequestIp(req: Request): string {
+        return (
+            req.ip ||
+            req.headers['x-forwarded-for']?.toString().split(',')[0]?.trim() ||
+            req.socket.remoteAddress ||
+            'unknown'
+        );
     }
 }
