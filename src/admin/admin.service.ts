@@ -27,6 +27,7 @@ import { ListAdminsQueryDto } from './dto/list-admins-query.dto';
 import { ChangeAdminPasswordDto } from './dto/change-admin-password.dto';
 import { IdentityStatus, Member, MemberDocument } from '../members/schemas/member.schema';
 import { RejectIdentityDto } from './dto/reject-identity.dto';
+import { ListMembersQueryDto } from './dto/list-members-query.dto';
 
 type AdminListFilter = {
     role?: AdminRole;
@@ -34,6 +35,17 @@ type AdminListFilter = {
     $or?: {
         fullName?: RegExp;
         email?: RegExp;
+    }[];
+};
+type MemberListFilter = {
+    identityStatus?: IdentityStatus;
+    isActive?: boolean;
+    emailVerified?: boolean;
+    $or?: {
+        fullName?: RegExp;
+        email?: RegExp;
+        nationalId?: RegExp;
+        referralCode?: RegExp;
     }[];
 };
 
@@ -215,6 +227,96 @@ export class AdminService implements OnModuleInit {
             },
         };
     }
+
+    async listMembers(query: ListMembersQueryDto): Promise<{
+        data: {
+            id: string;
+            fullName: string;
+            email: string;
+            nationalId: string;
+            dateOfBirth: Date;
+            emailVerified: boolean;
+            identityStatus: IdentityStatus;
+            isActive: boolean;
+            walletBalance: number;
+            lastDepositAt?: Date;
+            referralCode: string;
+            createdAt?: Date;
+            updatedAt?: Date;
+        }[];
+        pagination: {
+            page: number;
+            limit: number;
+            total: number;
+            totalPages: number;
+        };
+    }> {
+        const page = query.page ?? 1;
+        const limit = query.limit ?? 10;
+        const skip = (page - 1) * limit;
+
+        const filter: MemberListFilter = {};
+
+        if (query.identityStatus) {
+            filter.identityStatus = query.identityStatus;
+        }
+
+        if (typeof query.isActive === 'boolean') {
+            filter.isActive = query.isActive;
+        }
+
+        if (typeof query.emailVerified === 'boolean') {
+            filter.emailVerified = query.emailVerified;
+        }
+
+        if (query.search) {
+            const searchRegex = new RegExp(query.search, 'i');
+
+            filter.$or = [
+                { fullName: searchRegex },
+                { email: searchRegex },
+                { nationalId: searchRegex },
+                { referralCode: searchRegex },
+            ];
+        }
+
+        const [members, total] = await Promise.all([
+            this.memberModel
+                .find(filter)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .select('-password')
+                .exec(),
+
+            this.memberModel.countDocuments(filter).exec(),
+        ]);
+
+        return {
+            data: members.map((member) => ({
+                id: member._id.toString(),
+                fullName: member.fullName,
+                email: member.email,
+                nationalId: member.nationalId,
+                dateOfBirth: member.dateOfBirth,
+                emailVerified: member.emailVerified,
+                identityStatus: member.identityStatus,
+                isActive: member.isActive,
+                walletBalance: member.walletBalance,
+                lastDepositAt: member.lastDepositAt,
+                referralCode: member.referralCode,
+                createdAt: member.createdAt,
+                updatedAt: member.updatedAt,
+            })),
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
+    }
+
 
     async changePassword(
         currentAdminId: string,
