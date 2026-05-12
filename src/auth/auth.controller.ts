@@ -19,20 +19,21 @@ export class AuthController {
     register(
         @Body() dto: RegisterDto,
         @Query() query: RegisterQueryDto,
+        @Req() req: Request
     ): Promise<{ memberId: string; verificationId: string; message: string }> {
-        return this.authService.register(dto, query.ref);
+        return this.authService.register(dto, query.ref, this.getRequestIp(req));
     }
 
     @Post('verify-otp')
-    verifyOtp(@Body() dto: VerifyOtpDto): Promise<{ message: string }> {
-        return this.authService.verifyOtp(dto);
+    verifyOtp(@Body() dto: VerifyOtpDto, @Req() req: Request): Promise<{ message: string }> {
+        return this.authService.verifyOtp(dto, this.getRequestIp(req));
     }
 
     @Post('resend-otp')
     resendOtp(
-        @Body() dto: ResendOtpDto,
+        @Body() dto: ResendOtpDto, @Req() req: Request
     ): Promise<{ verificationId: string; message: string }> {
-        return this.authService.resendOtp(dto);
+        return this.authService.resendOtp(dto, this.getRequestIp(req));
     }
 
     @Post('set-password')
