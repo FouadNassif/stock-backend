@@ -27,10 +27,13 @@ ADMIN_FULL_NAME=Omar Admin
 | POST | `/api/admin/auth/login` | Admin login |
 | POST | `/api/admin/auth/change-password` | Change own password |
 | POST | `/api/admin/users` | Create admin/analyst/support user |
-| GET | `/api/admin/users` | List admin users |
-| GET | `/api/admin/withdrawals` | List withdrawal review queue |
 | POST | `/api/admin/withdrawals/:id/approve` | Approve withdrawal |
 | POST | `/api/admin/withdrawals/:id/reject` | Reject withdrawal |
+| POST | `/api/admin/members/:id/identity/approve` | Approve Identity |
+| POST | `/api/admin/members/:id/identity/reject` | Reject Identity |
+| GET | `/api/admin/users` | List admin users |
+| GET | `/api/admin/memnbers` | List Members |
+| GET | `/api/admin/withdrawals` | List withdrawal review queue |
 
 ## Request Bodies
 
@@ -58,6 +61,14 @@ ADMIN_FULL_NAME=Omar Admin
 ```json
 {
   "reason": "Bank account details are invalid"
+}
+```
+
+### Reject Identity
+
+```json
+{
+  "reason": "Idnetity Image Unclear"
 }
 ```
 

@@ -58,7 +58,10 @@ Error Examples
 ### Admin Users
 
 - Create New Admin User
+- Approve Identity
+- Reject Identity 
 - List Admin Users
+- List Members
 
 ### Stocks
 
