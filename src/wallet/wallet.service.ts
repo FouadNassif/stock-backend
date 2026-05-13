@@ -4,9 +4,9 @@ import {
     NotFoundException,
     UnauthorizedException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectModel, InjectConnection } from '@nestjs/mongoose';
 import { randomUUID } from 'crypto';
-import { Model, Types } from 'mongoose';
+import { Model, Types, Connection, ClientSession } from 'mongoose';
 
 import { DepositDto } from './dto/deposit.dto';
 import { ListTransactionsQueryDto } from './dto/list-transactions-query.dto';
@@ -17,8 +17,6 @@ import { RejectWithdrawalDto } from './dto/reject-withdrawal.dto';
 import {
     Transaction,
     TransactionDocument,
-    TransactionStatus,
-    TransactionType,
 } from './schemas/transaction.schema';
 import {
     Member,
@@ -26,34 +24,14 @@ import {
 } from '../members/schemas/member.schema';
 import { NotificationsService } from '../notifications/notifications.service';
 import { checkMemberEligibility } from '../common/utils/member.util';
+import { TransactionResponse, WithdrawalFilter } from './types/transaction-response.type';
+import { toTransactionResponse } from './mappers/transaction.mapper';
+import { generateTransactionReference } from './utils/transaction.utils';
+import { TransactionStatus, TransactionType } from './types/transaction.type';
 
 type TransactionFilter = {
     memberId: Types.ObjectId;
     type?: TransactionType;
-    status?: TransactionStatus;
-    createdAt?: {
-        $gte?: Date;
-        $lte?: Date;
-    };
-};
-
-type TransactionResponse = {
-    id: string;
-    type: TransactionType;
-    amount: number;
-    status: TransactionStatus;
-    referenceId: string;
-    notes?: string;
-    balanceBefore: number;
-    balanceAfter: number;
-    processedAt?: Date;
-    rejectedReason?: string;
-    createdAt?: Date;
-    updatedAt?: Date;
-};
-
-type WithdrawalFilter = {
-    type: TransactionType.Withdrawal;
     status?: TransactionStatus;
     createdAt?: {
         $gte?: Date;
@@ -66,6 +44,9 @@ export class WalletService {
     private readonly withdrawalHoldHours = 48;
 
     constructor(
+        @InjectConnection()
+        private readonly connection: Connection,
+
         @InjectModel(Transaction.name)
         private readonly transactionModel: Model<TransactionDocument>,
 
@@ -94,7 +75,7 @@ export class WalletService {
             type: TransactionType.Deposit,
             amount: dto.amount,
             status: TransactionStatus.Pending,
-            referenceId: this.generateTransactionReference(TransactionType.Deposit),
+            referenceId: generateTransactionReference(TransactionType.Deposit),
             notes: 'Deposit simulated as successful payment',
             balanceBefore,
             balanceAfter,
@@ -118,7 +99,7 @@ export class WalletService {
         return {
             message: 'Deposit completed successfully',
             walletBalance: eligibleMember.walletBalance,
-            transaction: this.toTransactionResponse(transaction),
+            transaction: toTransactionResponse(transaction),
         };
     }
 
@@ -146,9 +127,7 @@ export class WalletService {
             throw new BadRequestException('Withdrawal is not available because no deposit was found');
         }
 
-        const withdrawAvailableAt = this.getWithdrawAvailableAt(
-            eligibleMember.lastDepositAt,
-        );
+        const withdrawAvailableAt = this.getWithdrawAvailableAt(eligibleMember.lastDepositAt);
 
         if (new Date() < withdrawAvailableAt) {
             throw new BadRequestException(`Withdrawal is allowed only after ${this.withdrawalHoldHours} hours from the most recent deposit`);
@@ -159,7 +138,7 @@ export class WalletService {
             type: TransactionType.Withdrawal,
             amount: dto.amount,
             status: TransactionStatus.Pending,
-            referenceId: this.generateTransactionReference(TransactionType.Withdrawal),
+            referenceId: generateTransactionReference(TransactionType.Withdrawal),
             notes: 'Withdrawal request pending admin review',
             balanceBefore: eligibleMember.walletBalance,
             balanceAfter: eligibleMember.walletBalance,
@@ -169,7 +148,7 @@ export class WalletService {
             message: 'Withdrawal request submitted for review',
             availableBalance: availableBalance - dto.amount,
             pendingWithdrawalAmount: pendingWithdrawalAmount + dto.amount,
-            transaction: this.toTransactionResponse(transaction),
+            transaction: toTransactionResponse(transaction),
         };
     }
 
@@ -255,7 +234,7 @@ export class WalletService {
 
         return {
             data: transactions.map((transaction) =>
-                this.toTransactionResponse(transaction),
+                toTransactionResponse(transaction),
             ),
             pagination: {
                 page,
@@ -388,68 +367,89 @@ export class WalletService {
         transaction: TransactionResponse;
         walletBalance: number;
     }> {
-        if (!Types.ObjectId.isValid(withdrawalId)) {
-            throw new NotFoundException('Withdrawal request not found');
+        const session = await this.connection.startSession();
+
+        let response!: {
+            message: string;
+            transaction: TransactionResponse;
+            walletBalance: number;
+        };
+
+        let emailPayload!: {
+            email: string;
+            fullName: string;
+            amount: number;
+            walletBalance: number;
+        };
+
+        try {
+            await session.withTransaction(async () => {
+                const withdrawal = await this.transactionModel.findById(withdrawalId).session(session).exec();
+
+                if (!withdrawal) {
+                    throw new NotFoundException('Withdrawal request not found');
+                }
+
+                if (withdrawal.type !== TransactionType.Withdrawal) {
+                    throw new BadRequestException('Transaction is not a withdrawal request');
+                }
+
+                if (withdrawal.status !== TransactionStatus.Pending) {
+                    throw new BadRequestException('Withdrawal request is already processed');
+                }
+
+                const member = await this.memberModel.findById(withdrawal.memberId).session(session).exec();
+
+                const eligibleMember = checkMemberEligibility(member, true);
+
+                const pendingWithdrawalAmount = await this.getPendingWithdrawalAmount(eligibleMember._id, session);
+
+                const otherPendingWithdrawalAmount = pendingWithdrawalAmount - withdrawal.amount;
+
+                const availableBalance = eligibleMember.walletBalance - otherPendingWithdrawalAmount;
+
+                if (availableBalance < withdrawal.amount) {
+                    throw new BadRequestException('Insufficient available balance');
+                }
+
+                const balanceBefore = eligibleMember.walletBalance;
+                const balanceAfter = balanceBefore - withdrawal.amount;
+
+                eligibleMember.walletBalance = balanceAfter;
+                await eligibleMember.save({ session });
+
+                withdrawal.status = TransactionStatus.Completed;
+                withdrawal.balanceBefore = balanceBefore;
+                withdrawal.balanceAfter = balanceAfter;
+                withdrawal.processedAt = new Date();
+                withdrawal.notes = `Withdrawal approved by admin ${currentAdminId}`;
+                await withdrawal.save({ session });
+
+                response = {
+                    message: 'Withdrawal approved successfully',
+                    transaction: toTransactionResponse(withdrawal),
+                    walletBalance: eligibleMember.walletBalance,
+                };
+
+                emailPayload = {
+                    email: eligibleMember.email,
+                    fullName: eligibleMember.fullName,
+                    amount: withdrawal.amount,
+                    walletBalance: eligibleMember.walletBalance,
+                };
+            });
+        } finally {
+            await session.endSession();
         }
-
-        const withdrawal = await this.transactionModel
-            .findById(withdrawalId)
-            .exec();
-
-        if (!withdrawal) {
-            throw new NotFoundException('Withdrawal request not found');
-        }
-
-        if (withdrawal.type !== TransactionType.Withdrawal) {
-            throw new BadRequestException('Transaction is not a withdrawal request');
-        }
-
-        if (withdrawal.status !== TransactionStatus.Pending) {
-            throw new BadRequestException('Withdrawal request is already processed');
-        }
-
-        const member = await this.memberModel.findById(withdrawal.memberId).exec();
-        const eligibleMember = checkMemberEligibility(member, true);
-
-        const pendingWithdrawalAmount = await this.getPendingWithdrawalAmount(
-            eligibleMember._id,
-        );
-
-        const otherPendingWithdrawalAmount =
-            pendingWithdrawalAmount - withdrawal.amount;
-
-        const availableBalance =
-            eligibleMember.walletBalance - otherPendingWithdrawalAmount;
-
-        if (availableBalance < withdrawal.amount) {
-            throw new BadRequestException('Insufficient available balance');
-        }
-
-        const balanceBefore = eligibleMember.walletBalance;
-        const balanceAfter = balanceBefore - withdrawal.amount;
-
-        eligibleMember.walletBalance = balanceAfter;
-        await eligibleMember.save();
-
-        withdrawal.status = TransactionStatus.Completed;
-        withdrawal.balanceBefore = balanceBefore;
-        withdrawal.balanceAfter = balanceAfter;
-        withdrawal.processedAt = new Date();
-        withdrawal.notes = `Withdrawal approved by admin ${currentAdminId}`;
-        await withdrawal.save();
 
         await this.notificationsService.sendWithdrawalApprovedEmail(
-            eligibleMember.email,
-            eligibleMember.fullName,
-            withdrawal.amount,
-            eligibleMember.walletBalance,
+            emailPayload.email,
+            emailPayload.fullName,
+            emailPayload.amount,
+            emailPayload.walletBalance,
         );
 
-        return {
-            message: 'Withdrawal approved successfully',
-            transaction: this.toTransactionResponse(withdrawal),
-            walletBalance: eligibleMember.walletBalance,
-        };
+        return response;
     }
 
     async rejectWithdrawal(
@@ -464,9 +464,7 @@ export class WalletService {
             throw new NotFoundException('Withdrawal request not found');
         }
 
-        const withdrawal = await this.transactionModel
-            .findById(withdrawalId)
-            .exec();
+        const withdrawal = await this.transactionModel.findById(withdrawalId).exec();
 
         if (!withdrawal) {
             throw new NotFoundException('Withdrawal request not found');
@@ -500,7 +498,7 @@ export class WalletService {
 
         return {
             message: 'Withdrawal rejected successfully',
-            transaction: this.toTransactionResponse(withdrawal),
+            transaction: toTransactionResponse(withdrawal),
         };
     }
 
@@ -510,12 +508,10 @@ export class WalletService {
         );
     }
 
-    private generateTransactionReference(type: TransactionType): string {
-        return `${type.toUpperCase()}-${randomUUID()}`;
-    }
 
     private async getPendingWithdrawalAmount(
         memberId: Types.ObjectId,
+        session?: ClientSession,
     ): Promise<number> {
         const result = await this.transactionModel.aggregate<{
             totalPendingAmount: number;
@@ -535,27 +531,8 @@ export class WalletService {
                     },
                 },
             },
-        ]);
+        ]).session(session ?? null);
 
         return result[0]?.totalPendingAmount ?? 0;
-    }
-
-    private toTransactionResponse(
-        transaction: TransactionDocument,
-    ): TransactionResponse {
-        return {
-            id: transaction._id.toString(),
-            type: transaction.type,
-            amount: transaction.amount,
-            status: transaction.status,
-            referenceId: transaction.referenceId,
-            notes: transaction.notes,
-            balanceBefore: transaction.balanceBefore,
-            balanceAfter: transaction.balanceAfter,
-            processedAt: transaction.processedAt,
-            rejectedReason: transaction.rejectedReason,
-            createdAt: transaction.createdAt,
-            updatedAt: transaction.updatedAt,
-        };
     }
 }

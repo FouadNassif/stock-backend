@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
 import { buildOtpEmailTemplate, buildPasswordResetOtpEmailTemplate } from './templates/otp.template';
-import { buildIdentityApprovedEmailTemplate, buildIdentityRejectedEmailTemplate, buildNewAdminEmailTemplate } from './templates/admin.template';
+import { buildIdentityApprovedEmailTemplate, buildIdentityRejectedEmailTemplate, buildMemberSuspendedEmailTemplate, buildNewAdminEmailTemplate } from './templates/admin.template';
 import { buildWalletCreditEmailTemplate, buildWithdrawalApprovedEmailTemplate, buildWithdrawalRejectedEmailTemplate } from './templates/transaction.template';
 import { buildTradeConfirmationEmailTemplate } from './templates/order.template';
 
@@ -176,6 +176,22 @@ export class NotificationsService {
       subject: 'Identity Verification Rejected',
       text: `Dear ${fullName}, your identity verification has been rejected. Reason: ${reason}`,
       html: buildIdentityRejectedEmailTemplate({ fullName, reason }),
+    });
+  }
+
+  async sendMemberSuspendedEmail(
+    email: string,
+    fullName: string,
+    reason: string,
+  ): Promise<void> {
+    const from = this.configService.getOrThrow<string>('MAIL_FROM');
+
+    await this.transporter.sendMail({
+      from,
+      to: email,
+      subject: 'Account Suspended',
+      text: `Dear ${fullName}, your account has been suspended. Reason: ${reason}`,
+      html: buildMemberSuspendedEmailTemplate({ fullName, reason }),
     });
   }
 

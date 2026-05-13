@@ -16,6 +16,7 @@ import { RejectWithdrawalDto } from '../wallet/dto/reject-withdrawal.dto';
 import { RejectIdentityDto } from './dto/reject-identity.dto';
 import { ListMembersQueryDto } from './dto/list-members-query.dto';
 import { ObjectIdPipe } from 'src/common/pipes/object-id.pipe';
+import { ManualWalletAdjustmentDto } from './dto/manual-wallet-adjustment.dto';
 
 
 @Controller('admin')
@@ -107,5 +108,34 @@ export class AdminController {
     @AdminRoles(AdminRole.Admin)
     rejectIdentity(@Param('id', ObjectIdPipe) id: string, @Body() dto: RejectIdentityDto) {
         return this.adminService.rejectIdentity(id, dto);
+    }
+
+    @Post('members/:id/status/activate')
+    @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+    @AdminRoles(AdminRole.Admin)
+    activateMember(@Param('id', ObjectIdPipe) id: string,) {
+        return this.adminService.activateMember(id);
+    }
+
+    @Post('members/:id/status/suspend')
+    @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+    @AdminRoles(AdminRole.Admin)
+    suspendMember(@Param('id', ObjectIdPipe) id: string, @Body() dto: RejectIdentityDto) {
+        return this.adminService.suspendMember(id, dto);
+    }
+
+    @Post('members/:id/wallet-adjustments')
+    @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+    @AdminRoles(AdminRole.Admin)
+    adjustMemberWallet(
+        @Param('id', ObjectIdPipe) memberId: string,
+        @CurrentAdmin() currentAdmin: AdminJwtPayload,
+        @Body() dto: ManualWalletAdjustmentDto,
+    ) {
+        return this.adminService.adjustMemberWallet(
+            memberId,
+            currentAdmin.sub,
+            dto,
+        );
     }
 }

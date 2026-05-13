@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
 
@@ -28,6 +28,14 @@ import { ChangeAdminPasswordDto } from './dto/change-admin-password.dto';
 import { IdentityStatus, Member, MemberDocument } from '../members/schemas/member.schema';
 import { RejectIdentityDto } from './dto/reject-identity.dto';
 import { ListMembersQueryDto } from './dto/list-members-query.dto';
+import { SuspendMemberDto } from './dto/suspend-member.dto';
+import { Connection } from 'mongoose';
+import { Transaction, TransactionDocument } from 'src/wallet/schemas/transaction.schema';
+import { ManualWalletAdjustmentDto, WalletAdjustmentType } from './dto/manual-wallet-adjustment.dto';
+import { generateTransactionReference } from 'src/wallet/utils/transaction.utils';
+import { toTransactionResponse } from 'src/wallet/mappers/transaction.mapper';
+import { TransactionResponse } from 'src/wallet/types/transaction-response.type';
+import { TransactionStatus, TransactionType } from 'src/wallet/types/transaction.type';
 
 type AdminListFilter = {
     role?: AdminRole;
@@ -52,6 +60,12 @@ type MemberListFilter = {
 @Injectable()
 export class AdminService implements OnModuleInit {
     constructor(
+        @InjectConnection()
+        private readonly connection: Connection,
+
+        @InjectModel(Transaction.name)
+        private readonly transactionModel: Model<TransactionDocument>,
+
         @InjectModel(Admin.name)
         private readonly adminModel: Model<AdminDocument>,
 
@@ -402,6 +416,127 @@ export class AdminService implements OnModuleInit {
         return {
             message: 'Identity rejected successfully',
         };
+    }
+
+    async activateMember(
+        memberId: string,
+    ): Promise<{ message: string }> {
+        const member = await this.memberModel.findById(memberId).exec();
+
+        if (!member) {
+            throw new NotFoundException('Member not found');
+        }
+
+        if (member.isActive === true) {
+            throw new BadRequestException('Member is already activated');
+        }
+
+        member.isActive = true;
+        await member.save();
+
+        return {
+            message: 'Member activated successfully',
+        };
+    }
+
+    async suspendMember(
+        memberId: string,
+        dto: SuspendMemberDto,
+    ): Promise<{ message: string }> {
+        const member = await this.memberModel.findById(memberId).exec();
+
+        if (!member) {
+            throw new NotFoundException('Member not found');
+        }
+
+        if (member.isActive === false) {
+            throw new BadRequestException('Member is already suspended');
+        }
+
+        member.isActive = false;
+        await member.save();
+
+        await this.notificationsService.sendMemberSuspendedEmail(
+            member.email,
+            member.fullName,
+            dto.reason,
+        );
+
+        return {
+            message: 'Member suspended successfully',
+        };
+    }
+
+    async adjustMemberWallet(
+        memberId: string,
+        currentAdminId: string,
+        dto: ManualWalletAdjustmentDto,
+    ): Promise<{
+        message: string;
+        walletBalance: number;
+        transaction: TransactionResponse;
+    }> {
+        const session = await this.connection.startSession();
+
+        let response!: {
+            message: string;
+            walletBalance: number;
+            transaction: TransactionResponse;
+        };
+
+        try {
+            await session.withTransaction(async () => {
+                const member = await this.memberModel.findById(memberId).session(session).exec();
+
+                if (!member) {
+                    throw new NotFoundException('Member not found');
+                }
+
+                const balanceBefore = member.walletBalance;
+
+                const adjustmentAmount = dto.type === WalletAdjustmentType.Credit ? dto.amount : -dto.amount;
+
+                const balanceAfter = balanceBefore + adjustmentAmount;
+
+                if (balanceAfter < 0) {
+                    throw new BadRequestException('Wallet adjustment cannot make member balance negative');
+                }
+
+                member.walletBalance = balanceAfter;
+                await member.save({ session });
+
+                const createdTransactions = await this.transactionModel.create(
+                    [
+                        {
+                            memberId: member._id,
+                            type: TransactionType.Adjustment,
+                            amount: dto.amount,
+                            status: TransactionStatus.Completed,
+                            referenceId: generateTransactionReference(
+                                TransactionType.Adjustment,
+                            ),
+                            notes: `Manual wallet ${dto.type} by admin ${currentAdminId}. Reason: ${dto.reason}`,
+                            balanceBefore,
+                            balanceAfter,
+                            processedAt: new Date(),
+                        },
+                    ],
+                    { session },
+                );
+
+                const transaction = createdTransactions[0];
+
+                response = {
+                    message: 'Member wallet adjusted successfully',
+                    walletBalance: member.walletBalance,
+                    transaction: toTransactionResponse(transaction),
+                };
+            });
+        } finally {
+            await session.endSession();
+        }
+
+        return response;
     }
 
     private async seedDefaultAdmin(): Promise<void> {

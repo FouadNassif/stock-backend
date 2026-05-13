@@ -7,11 +7,8 @@ import {
     Max,
     Min,
 } from 'class-validator';
+import { TransactionStatus, TransactionType } from '../types/transaction.type';
 
-import {
-    TransactionStatus,
-    TransactionType,
-} from '../schemas/transaction.schema';
 
 export class ListTransactionsQueryDto {
     @IsOptional()
