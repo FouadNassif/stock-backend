@@ -67,7 +67,7 @@ export class StocksController {
     @Patch(':id/delist')
     @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
     @AdminRoles(AdminRole.Admin, AdminRole.Analyst)
-    delistStock(@Param('id') id: string) {
-        return this.stocksService.delistStock(id);
+    delistStock(@Param('id') id: string, @CurrentAdmin() currentAdmin: AdminJwtPayload,) {
+        return this.stocksService.delistStock(id, currentAdmin.sub);
     }
 }
