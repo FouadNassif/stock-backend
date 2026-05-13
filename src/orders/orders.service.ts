@@ -5,12 +5,13 @@ import { Order, OrderDocument, OrderStatus, OrderType } from './schemas/order.sc
 import { PositionDocument, PositionStatus } from './schemas/position.schema';
 import { MemberDocument } from '../members/schemas/member.schema';
 import { StockDocument } from '../stocks/schemas/stock.schema';
-import { TransactionDocument, TransactionStatus, TransactionType } from '../wallet/schemas/transaction.schema';
+import { TransactionDocument } from '../wallet/schemas/transaction.schema';
 import { NotificationsService } from '../notifications/notifications.service';
 import { checkMemberEligibility } from '../common/utils/member.util';
 import { BuyOrderDto } from './dto/buy-order.dto';
 import { SellOrderDto } from './dto/sell-order.dto';
 import { ListOrdersQueryDto } from './dto/list-orders-query.dto';
+import { TransactionStatus, TransactionType } from 'src/wallet/types/transaction.type';
 
 
 type OrderResponse = {

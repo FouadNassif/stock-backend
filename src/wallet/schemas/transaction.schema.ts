@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
+import { TransactionStatus, TransactionType } from '../types/transaction.type';
 
 export type TransactionDocument = HydratedDocument<Transaction> & {
     _id: Types.ObjectId;
@@ -7,18 +8,7 @@ export type TransactionDocument = HydratedDocument<Transaction> & {
     updatedAt: Date;
 };
 
-export enum TransactionType {
-    Deposit = 'deposit',
-    Withdrawal = 'withdrawal',
-    Buy = 'buy',
-    Sell = 'sell',
-}
 
-export enum TransactionStatus {
-    Pending = 'pending',
-    Completed = 'completed',
-    Rejected = 'rejected',
-}
 
 @Schema({ timestamps: true })
 export class Transaction {
