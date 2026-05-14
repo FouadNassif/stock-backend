@@ -17,6 +17,7 @@ import { RejectIdentityDto } from './dto/reject-identity.dto';
 import { ListMembersQueryDto } from './dto/list-members-query.dto';
 import { ObjectIdPipe } from 'src/common/pipes/object-id.pipe';
 import { ManualWalletAdjustmentDto } from './dto/manual-wallet-adjustment.dto';
+import { MemberStatusDto } from './dto/member-status-dto';
 import { ListTransactionsQueryDto } from 'src/wallet/dto/list-transactions-query.dto';
 import { ListOrdersQueryDto } from 'src/orders/dto/list-orders-query.dto';
 
@@ -126,29 +127,29 @@ export class AdminController {
     @Post('members/:id/identity/approve')
     @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
     @AdminRoles(AdminRole.Admin)
-    approveIdentity(@Param('id', ObjectIdPipe) id: string,) {
-        return this.adminService.approveIdentity(id);
+    approveIdentity(@Param('id', ObjectIdPipe) id: string, @CurrentAdmin() currentAdmin: AdminJwtPayload,) {
+        return this.adminService.approveIdentity(id, currentAdmin.sub);
     }
 
     @Post('members/:id/identity/reject')
     @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
     @AdminRoles(AdminRole.Admin)
-    rejectIdentity(@Param('id', ObjectIdPipe) id: string, @Body() dto: RejectIdentityDto) {
-        return this.adminService.rejectIdentity(id, dto);
+    rejectIdentity(@Param('id', ObjectIdPipe) id: string, @Body() dto: RejectIdentityDto, @CurrentAdmin() currentAdmin: AdminJwtPayload,) {
+        return this.adminService.rejectIdentity(id, currentAdmin.sub, dto);
     }
 
     @Post('members/:id/status/activate')
     @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
     @AdminRoles(AdminRole.Admin)
-    activateMember(@Param('id', ObjectIdPipe) id: string,) {
-        return this.adminService.activateMember(id);
+    activateMember(@Param('id', ObjectIdPipe) id: string, @CurrentAdmin() currentAdmin: AdminJwtPayload, @Body() dto: MemberStatusDto) {
+        return this.adminService.activateMember(id, dto, currentAdmin.sub);
     }
 
     @Post('members/:id/status/suspend')
     @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
     @AdminRoles(AdminRole.Admin)
-    suspendMember(@Param('id', ObjectIdPipe) id: string, @Body() dto: RejectIdentityDto) {
-        return this.adminService.suspendMember(id, dto);
+    suspendMember(@Param('id', ObjectIdPipe) id: string, @Body() dto: MemberStatusDto, @CurrentAdmin() currentAdmin: AdminJwtPayload) {
+        return this.adminService.suspendMember(id, dto, currentAdmin.sub);
     }
 
     @Post('members/:id/wallet-adjustments')

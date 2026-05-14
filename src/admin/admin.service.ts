@@ -16,6 +16,8 @@ import { ChangeAdminPasswordDto } from './dto/change-admin-password.dto';
 import { IdentityStatus, Member, MemberDocument } from '../members/schemas/member.schema';
 import { RejectIdentityDto } from './dto/reject-identity.dto';
 import { ListMembersQueryDto } from './dto/list-members-query.dto';
+import { MemberStatusDto } from './dto/member-status-dto';
+import { Connection } from 'mongoose';
 import { SuspendMemberDto } from './dto/suspend-member.dto';
 import { Transaction, TransactionDocument } from '../wallet/schemas/transaction.schema';
 import { ManualWalletAdjustmentDto, WalletAdjustmentType } from './dto/manual-wallet-adjustment.dto';
@@ -23,6 +25,8 @@ import { generateTransactionReference } from '../wallet/utils/transaction.utils'
 import { toTransactionResponse } from '../wallet/mappers/transaction.mapper';
 import { TransactionResponse } from '../wallet/types/transaction-response.type';
 import { TransactionStatus, TransactionType } from '../wallet/types/transaction.type';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { AuditActorType, AuditLogAction, AuditTargetType } from '../audit-logs/types/audit-log-action.type';
 import { Order, OrderDocument } from '../orders/schemas/order.schema';
 import { ListTransactionsQueryDto } from '../wallet/dto/list-transactions-query.dto';
 import { ListOrdersQueryDto } from '../orders/dto/list-orders-query.dto';
@@ -69,6 +73,7 @@ export class AdminService implements OnModuleInit {
         private readonly configService: ConfigService,
         private readonly jwtService: JwtService,
         private readonly notificationsService: NotificationsService,
+        private readonly auditLogsService: AuditLogsService,
     ) { }
 
     async onModuleInit(): Promise<void> {
@@ -150,6 +155,20 @@ export class AdminService implements OnModuleInit {
             temporaryPassword,
             newAdmin.fullName,
         );
+
+        await this.auditLogsService.create({
+            actorId: currentAdminId,
+            actorType: AuditActorType.Admin,
+            action: AuditLogAction.AdminCreated,
+            targetType: AuditTargetType.Admin,
+            targetId: newAdmin._id.toString(),
+            description: 'CMS user created by admin',
+            metadata: {
+                createdAdminEmail: newAdmin.email,
+                createdAdminFullName: newAdmin.fullName,
+                createdAdminRole: newAdmin.role,
+            },
+        });
 
         return {
             id: newAdmin._id.toString(),
@@ -558,7 +577,7 @@ export class AdminService implements OnModuleInit {
         };
     }
 
-    async approveIdentity(memberId: string): Promise<{ message: string }> {
+    async approveIdentity(memberId: string, currentAdminId: string): Promise<{ message: string }> {
         const member = await this.memberModel.findById(memberId).exec();
 
         if (!member) {
@@ -568,6 +587,7 @@ export class AdminService implements OnModuleInit {
         if (member.identityStatus === IdentityStatus.Approved) {
             throw new BadRequestException('Identity is already approved');
         }
+        const previousStatus = member.identityStatus;
 
         member.identityStatus = IdentityStatus.Approved;
         await member.save();
@@ -577,12 +597,31 @@ export class AdminService implements OnModuleInit {
             member.fullName,
         );
 
+        await this.auditLogsService.create({
+            actorId: currentAdminId,
+            actorType: AuditActorType.Admin,
+            action: AuditLogAction.MemberIdentityApproved,
+            targetType: AuditTargetType.Member,
+            targetId: member._id.toString(),
+            description: 'Member identity approved by admin',
+            changes: {
+                identityStatus: {
+                    before: previousStatus,
+                    after: member.identityStatus,
+                },
+            },
+            metadata: {
+                memberEmail: member.email,
+                memberFullName: member.fullName,
+            },
+        });
+
         return {
             message: 'Identity approved successfully',
         };
     }
 
-    async rejectIdentity(memberId: string, dto: RejectIdentityDto): Promise<{ message: string }> {
+    async rejectIdentity(memberId: string, currentAdminId: string, dto: RejectIdentityDto): Promise<{ message: string }> {
         const member = await this.memberModel.findById(memberId).exec();
 
         if (!member) {
@@ -593,6 +632,7 @@ export class AdminService implements OnModuleInit {
             throw new BadRequestException('Identity is already rejected');
         }
 
+        const previousStatus = member.identityStatus;
         member.identityStatus = IdentityStatus.Rejected;
         await member.save();
 
@@ -602,6 +642,27 @@ export class AdminService implements OnModuleInit {
             dto.reason,
         );
 
+        await this.auditLogsService.create({
+            actorId: currentAdminId,
+            actorType: AuditActorType.Admin,
+            action: AuditLogAction.MemberIdentityRejected,
+            targetType: AuditTargetType.Member,
+            targetId: member._id.toString(),
+            description: 'Member identity rejected by admin',
+            reason: dto.reason,
+            changes: {
+                identityStatus: {
+                    before: previousStatus,
+                    after: member.identityStatus,
+                },
+            },
+            metadata: {
+                memberEmail: member.email,
+                memberFullName: member.fullName,
+            },
+        });
+
+
         return {
             message: 'Identity rejected successfully',
         };
@@ -609,6 +670,8 @@ export class AdminService implements OnModuleInit {
 
     async activateMember(
         memberId: string,
+        dto: MemberStatusDto,
+        currentAdminId: string
     ): Promise<{ message: string }> {
         const member = await this.memberModel.findById(memberId).exec();
 
@@ -619,9 +682,29 @@ export class AdminService implements OnModuleInit {
         if (member.isActive === true) {
             throw new BadRequestException('Member is already activated');
         }
-
+        const previousStatus = member.isActive;
         member.isActive = true;
         await member.save();
+
+        await this.auditLogsService.create({
+            actorId: currentAdminId,
+            actorType: AuditActorType.Admin,
+            action: AuditLogAction.MemberReinstated,
+            targetType: AuditTargetType.Member,
+            targetId: member._id.toString(),
+            description: 'Member account reinstated by admin',
+            reason: dto.reason,
+            changes: {
+                isActive: {
+                    before: previousStatus,
+                    after: member.isActive,
+                },
+            },
+            metadata: {
+                memberEmail: member.email,
+                memberFullName: member.fullName,
+            },
+        });
 
         return {
             message: 'Member activated successfully',
@@ -630,7 +713,8 @@ export class AdminService implements OnModuleInit {
 
     async suspendMember(
         memberId: string,
-        dto: SuspendMemberDto,
+        dto: MemberStatusDto,
+        currentAdminId: string
     ): Promise<{ message: string }> {
         const member = await this.memberModel.findById(memberId).exec();
 
@@ -641,7 +725,7 @@ export class AdminService implements OnModuleInit {
         if (member.isActive === false) {
             throw new BadRequestException('Member is already suspended');
         }
-
+        const previousStatus = member.isActive;
         member.isActive = false;
         await member.save();
 
@@ -650,6 +734,26 @@ export class AdminService implements OnModuleInit {
             member.fullName,
             dto.reason,
         );
+
+        await this.auditLogsService.create({
+            actorId: currentAdminId,
+            actorType: AuditActorType.Admin,
+            action: AuditLogAction.MemberSuspended,
+            targetType: AuditTargetType.Member,
+            targetId: member._id.toString(),
+            description: 'Member account suspended by admin',
+            reason: dto.reason,
+            changes: {
+                isActive: {
+                    before: previousStatus,
+                    after: member.isActive,
+                },
+            },
+            metadata: {
+                memberEmail: member.email,
+                memberFullName: member.fullName,
+            },
+        });
 
         return {
             message: 'Member suspended successfully',
@@ -714,6 +818,32 @@ export class AdminService implements OnModuleInit {
                 );
 
                 const transaction = createdTransactions[0];
+
+                await this.auditLogsService.create(
+                    {
+                        actorId: currentAdminId,
+                        actorType: AuditActorType.Admin,
+                        action: AuditLogAction.WalletAdjusted,
+                        targetType: AuditTargetType.Member,
+                        targetId: member._id.toString(),
+                        description: `Manual wallet ${dto.type} performed by admin`,
+                        reason: dto.reason,
+                        changes: {
+                            walletBalance: {
+                                before: balanceBefore,
+                                after: balanceAfter,
+                            },
+                        },
+                        metadata: {
+                            adjustmentType: dto.type,
+                            amount: dto.amount,
+                            transactionId: transaction._id.toString(),
+                            memberEmail: member.email,
+                            memberFullName: member.fullName,
+                        },
+                    },
+                    session,
+                );
 
                 response = {
                     message: 'Member wallet adjusted successfully',

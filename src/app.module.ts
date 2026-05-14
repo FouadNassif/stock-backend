@@ -12,6 +12,8 @@ import { StocksModule } from './stocks/stocks.module';
 import { WalletModule } from './wallet/wallet.module';
 import { OrdersModule } from './orders/orders.module';
 import { RedisModule } from './common/redis/redis.module';
+import { AuditLogsModule } from './audit-logs/audit-logs.module';
+import { AuditLogsService } from './audit-logs/audit-logs.service';
 import { PaymentsModule } from './payments/payments.module';
 
 @Module({
@@ -37,6 +39,7 @@ import { PaymentsModule } from './payments/payments.module';
     StocksModule,
     WalletModule,
     OrdersModule,
+    AuditLogsModule,
     PaymentsModule,
   ],
 })

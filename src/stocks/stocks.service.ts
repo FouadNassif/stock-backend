@@ -7,6 +7,8 @@ import { ListStocksQueryDto } from './dto/list-stocks-query.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
 import { PriceHistory, PriceHistoryDocument } from './schemas/price-history.schema';
 import { Stock, StockDocument } from './schemas/stock.schema';
+import { AuditLogsService } from 'src/audit-logs/audit-logs.service';
+import { AuditActorType, AuditLogAction, AuditTargetType } from 'src/audit-logs/types/audit-log-action.type';
 
 type StockFilter = {
     sector?: string;
@@ -38,6 +40,8 @@ export class StocksService {
 
         @InjectModel(PriceHistory.name)
         private readonly priceHistoryModel: Model<PriceHistoryDocument>,
+
+        private readonly auditLogsService: AuditLogsService,
     ) { }
 
     async createStock(
@@ -67,6 +71,21 @@ export class StocksService {
             stockId: stock._id,
             price: stock.currentPrice,
             recordedAt: new Date(),
+        });
+
+        await this.auditLogsService.create({
+            actorId: currentAdminId,
+            actorType: AuditActorType.Admin,
+            action: AuditLogAction.StockCreated,
+            targetType: AuditTargetType.Stock,
+            targetId: stock._id.toString(),
+            description: 'Stock created by admin/analyst',
+            metadata: {
+                ticker: stock.ticker,
+                companyName: stock.companyName,
+                sector: stock.sector,
+                currentPrice: stock.currentPrice,
+            },
         });
 
         return {
@@ -187,8 +206,7 @@ export class StocksService {
         }
 
         const oldPrice = stock.currentPrice;
-        const isPriceChanged =
-            typeof dto.currentPrice === 'number' && dto.currentPrice !== oldPrice;
+        const isPriceChanged = typeof dto.currentPrice === 'number' && dto.currentPrice !== oldPrice;
 
         if (dto.companyName !== undefined) {
             stock.companyName = dto.companyName;
@@ -216,13 +234,58 @@ export class StocksService {
             });
         }
 
+        const changes: Record<string, { before?: unknown; after?: unknown }> = {};
+
+        if (dto.companyName !== undefined && dto.companyName !== stock.companyName) {
+            changes.companyName = {
+                before: stock.companyName,
+                after: dto.companyName,
+            };
+        }
+
+        if (dto.sector !== undefined && dto.sector !== stock.sector) {
+            changes.sector = {
+                before: stock.sector,
+                after: dto.sector,
+            };
+        }
+
+        if (dto.currentPrice !== undefined && dto.currentPrice !== stock.currentPrice) {
+            changes.currentPrice = {
+                before: stock.currentPrice,
+                after: dto.currentPrice,
+            };
+        }
+
+        if (dto.description !== undefined && dto.description !== stock.description) {
+            changes.description = {
+                before: stock.description,
+                after: dto.description,
+            };
+        }
+        if (Object.keys(changes).length > 0) {
+            await this.auditLogsService.create({
+                actorId: currentAdminId,
+                actorType: AuditActorType.Admin,
+                action: AuditLogAction.StockUpdated,
+                targetType: AuditTargetType.Stock,
+                targetId: stock._id.toString(),
+                description: 'Stock updated by admin/analyst',
+                changes,
+                metadata: {
+                    ticker: stock.ticker,
+                    companyName: stock.companyName,
+                },
+            });
+        }
+
         return {
             message: 'Stock updated successfully',
             stock: this.toStockResponse(stock),
         };
     }
 
-    async delistStock(id: string): Promise<{
+    async delistStock(id: string, currentAdminId: string): Promise<{
         message: string;
         stock: StockResponse;
     }> {
@@ -235,6 +298,25 @@ export class StocksService {
 
         stock.isListed = false;
         await stock.save();
+
+        await this.auditLogsService.create({
+            actorId: currentAdminId,
+            actorType: AuditActorType.Admin,
+            action: AuditLogAction.StockDelisted,
+            targetType: AuditTargetType.Stock,
+            targetId: stock._id.toString(),
+            description: 'Stock delisted by admin/analyst',
+            changes: {
+                isListed: {
+                    before: true,
+                    after: false,
+                },
+            },
+            metadata: {
+                ticker: stock.ticker,
+                companyName: stock.companyName,
+            },
+        });
 
         return {
             message: 'Stock delisted successfully',

@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
-export class SuspendMemberDto {
+export class MemberStatusDto {
     @IsString()
     @IsNotEmpty()
     @MaxLength(500)

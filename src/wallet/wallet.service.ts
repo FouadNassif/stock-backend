@@ -28,6 +28,8 @@ import { TransactionResponse, WithdrawalFilter } from './types/transaction-respo
 import { toTransactionResponse } from './mappers/transaction.mapper';
 import { generateTransactionReference } from './utils/transaction.utils';
 import { TransactionStatus, TransactionType } from './types/transaction.type';
+import { AuditLogsService } from 'src/audit-logs/audit-logs.service';
+import { AuditActorType, AuditLogAction, AuditTargetType } from 'src/audit-logs/types/audit-log-action.type';
 import { PaymentsService } from 'src/payments/payments.service';
 
 type TransactionFilter = {
@@ -55,6 +57,7 @@ export class WalletService {
         private readonly memberModel: Model<MemberDocument>,
 
         private readonly notificationsService: NotificationsService,
+        private readonly auditLogsService: AuditLogsService,
 
         private readonly paymentsService: PaymentsService,
     ) { }
@@ -402,6 +405,35 @@ export class WalletService {
                 withdrawal.notes = `Withdrawal approved by admin ${currentAdminId}`;
                 await withdrawal.save({ session });
 
+                await this.auditLogsService.create(
+                    {
+                        actorId: currentAdminId,
+                        actorType: AuditActorType.Admin,
+                        action: AuditLogAction.WithdrawalApproved,
+                        targetType: AuditTargetType.Withdrawal,
+                        targetId: withdrawal._id.toString(),
+                        description: 'Withdrawal request approved by admin',
+                        changes: {
+                            walletBalance: {
+                                before: balanceBefore,
+                                after: balanceAfter,
+                            },
+                            transactionStatus: {
+                                before: TransactionStatus.Pending,
+                                after: TransactionStatus.Completed,
+                            },
+                        },
+                        metadata: {
+                            memberId: eligibleMember._id.toString(),
+                            memberEmail: eligibleMember.email,
+                            memberFullName: eligibleMember.fullName,
+                            amount: withdrawal.amount,
+                            referenceId: withdrawal.referenceId,
+                        },
+                    },
+                    session,
+                );
+
                 response = {
                     message: 'Withdrawal approved successfully',
                     transaction: toTransactionResponse(withdrawal),
@@ -472,6 +504,29 @@ export class WalletService {
             withdrawal.amount,
             dto.reason,
         );
+
+        await this.auditLogsService.create({
+            actorId: currentAdminId,
+            actorType: AuditActorType.Admin,
+            action: AuditLogAction.WithdrawalRejected,
+            targetType: AuditTargetType.Withdrawal,
+            targetId: withdrawal._id.toString(),
+            description: 'Withdrawal request rejected by admin',
+            reason: dto.reason,
+            changes: {
+                transactionStatus: {
+                    before: TransactionStatus.Pending,
+                    after: TransactionStatus.Rejected,
+                },
+            },
+            metadata: {
+                memberId: eligibleMember._id.toString(),
+                memberEmail: eligibleMember.email,
+                memberFullName: eligibleMember.fullName,
+                amount: withdrawal.amount,
+                referenceId: withdrawal.referenceId,
+            },
+        });
 
         return {
             message: 'Withdrawal rejected successfully',
