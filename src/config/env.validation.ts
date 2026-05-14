@@ -49,4 +49,10 @@ export const envValidationSchema = Joi.object({
     RATE_R_OTP_STAGE1_TIME: Joi.number().integer().min(1).default(900),
     RATE_R_OTP_STAGE2_LIMIT: Joi.number().integer().min(1).default(10),
     RATE_R_OTP_STAGE2_TIME: Joi.number().integer().min(1).default(900),
+
+    STRIPE_SECRET_KEY: Joi.string().required(),
+    STRIPE_WEBHOOK_SECRET: Joi.string().required(),
+    STRIPE_CURRENCY: Joi.string().default('usd'),
+    STRIPE_SUCCESS_URL: Joi.string().uri().required(),
+    STRIPE_CANCEL_URL: Joi.string().uri().required(),
 });

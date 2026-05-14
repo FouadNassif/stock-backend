@@ -1,41 +1,32 @@
-import {
-    Injectable,
-    OnModuleInit,
-    ConflictException,
-    UnauthorizedException,
-    NotFoundException,
-    BadRequestException,
-} from '@nestjs/common';
+import { Injectable, OnModuleInit, ConflictException, UnauthorizedException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
-import { Model } from 'mongoose';
+import { Model, Types, Connection } from 'mongoose';
 
 import { AdminLoginDto } from './dto/admin-login.dto';
-import {
-    AdminRole,
-    Admin,
-    AdminDocument,
-} from './schemas/admin.schema';
+import { AdminRole, Admin, AdminDocument } from './schemas/admin.schema';
 import { AdminJwtPayload } from './types/admin-jwt-payload.type';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { generateTemporaryPassword } from '../common/utils/password.util';
-
 import { ListAdminsQueryDto } from './dto/list-admins-query.dto';
 import { ChangeAdminPasswordDto } from './dto/change-admin-password.dto';
 import { IdentityStatus, Member, MemberDocument } from '../members/schemas/member.schema';
 import { RejectIdentityDto } from './dto/reject-identity.dto';
 import { ListMembersQueryDto } from './dto/list-members-query.dto';
 import { SuspendMemberDto } from './dto/suspend-member.dto';
-import { Connection } from 'mongoose';
-import { Transaction, TransactionDocument } from 'src/wallet/schemas/transaction.schema';
+import { Transaction, TransactionDocument } from '../wallet/schemas/transaction.schema';
 import { ManualWalletAdjustmentDto, WalletAdjustmentType } from './dto/manual-wallet-adjustment.dto';
-import { generateTransactionReference } from 'src/wallet/utils/transaction.utils';
-import { toTransactionResponse } from 'src/wallet/mappers/transaction.mapper';
-import { TransactionResponse } from 'src/wallet/types/transaction-response.type';
-import { TransactionStatus, TransactionType } from 'src/wallet/types/transaction.type';
+import { generateTransactionReference } from '../wallet/utils/transaction.utils';
+import { toTransactionResponse } from '../wallet/mappers/transaction.mapper';
+import { TransactionResponse } from '../wallet/types/transaction-response.type';
+import { TransactionStatus, TransactionType } from '../wallet/types/transaction.type';
+import { Order, OrderDocument } from '../orders/schemas/order.schema';
+import { ListTransactionsQueryDto } from '../wallet/dto/list-transactions-query.dto';
+import { ListOrdersQueryDto } from '../orders/dto/list-orders-query.dto';
+import { toOrderResponse } from '../orders/mappers/order.mappers';
 
 type AdminListFilter = {
     role?: AdminRole;
@@ -71,6 +62,9 @@ export class AdminService implements OnModuleInit {
 
         @InjectModel(Member.name)
         private readonly memberModel: Model<MemberDocument>,
+
+        @InjectModel(Order.name)
+        private readonly orderModel: Model<OrderDocument>,
 
         private readonly configService: ConfigService,
         private readonly jwtService: JwtService,
@@ -322,6 +316,201 @@ export class AdminService implements OnModuleInit {
                 createdAt: member.createdAt,
                 updatedAt: member.updatedAt,
             })),
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
+    }
+
+    async getMemberById(memberId: string): Promise<{
+        id: string;
+        fullName: string;
+        email: string;
+        nationalId: string;
+        dateOfBirth: Date;
+        emailVerified: boolean;
+        referralCode: string;
+        identityStatus: string;
+        isActive: boolean;
+        walletBalance: number;
+        lastDepositAt?: Date;
+        createdAt?: Date;
+        updatedAt?: Date;
+    }> {
+        const member = await this.memberModel
+            .findById(memberId)
+            .select('-password')
+            .exec();
+
+        if (!member) {
+            throw new NotFoundException('Member not found');
+        }
+
+        return {
+            id: member._id.toString(),
+            fullName: member.fullName,
+            email: member.email,
+            nationalId: member.nationalId,
+            dateOfBirth: member.dateOfBirth,
+            emailVerified: member.emailVerified,
+            referralCode: member.referralCode,
+            identityStatus: member.identityStatus,
+            isActive: member.isActive,
+            walletBalance: member.walletBalance,
+            lastDepositAt: member.lastDepositAt,
+            createdAt: member.createdAt,
+            updatedAt: member.updatedAt,
+        };
+    }
+
+    async getMemberTransactions(
+        memberId: string,
+        query: ListTransactionsQueryDto,
+    ): Promise<{
+        data: ReturnType<typeof toTransactionResponse>[];
+        pagination: {
+            page: number;
+            limit: number;
+            total: number;
+            totalPages: number;
+        };
+    }> {
+        const member = await this.memberModel.findById(memberId).exec();
+
+        if (!member) {
+            throw new NotFoundException('Member not found');
+        }
+
+        const page = query.page ?? 1;
+        const limit = query.limit ?? 10;
+        const skip = (page - 1) * limit;
+
+        const filter: {
+            memberId: Types.ObjectId;
+            type?: typeof query.type;
+            status?: typeof query.status;
+            createdAt?: {
+                $gte?: Date;
+                $lte?: Date;
+            };
+        } = {
+            memberId: member._id,
+        };
+
+        if (query.type) {
+            filter.type = query.type;
+        }
+
+        if (query.status) {
+            filter.status = query.status;
+        }
+
+        if (query.from || query.to) {
+            filter.createdAt = {};
+
+            if (query.from) {
+                filter.createdAt.$gte = new Date(query.from);
+            }
+
+            if (query.to) {
+                filter.createdAt.$lte = new Date(query.to);
+            }
+        }
+
+        const [transactions, total] = await Promise.all([
+            this.transactionModel
+                .find(filter)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .exec(),
+
+            this.transactionModel.countDocuments(filter).exec(),
+        ]);
+
+        return {
+            data: transactions.map((transaction) =>
+                toTransactionResponse(transaction),
+            ),
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
+    }
+
+    async getMemberOrders(
+        memberId: string,
+        query: ListOrdersQueryDto,
+    ): Promise<{
+        data: ReturnType<typeof toOrderResponse>[];
+        pagination: {
+            page: number;
+            limit: number;
+            total: number;
+            totalPages: number;
+        };
+    }> {
+        const member = await this.memberModel.findById(memberId).exec();
+
+        if (!member) {
+            throw new NotFoundException('Member not found');
+        }
+
+        const page = query.page ?? 1;
+        const limit = query.limit ?? 10;
+        const skip = (page - 1) * limit;
+
+        const filter: {
+            memberId: Types.ObjectId;
+            type?: typeof query.type;
+            status?: typeof query.status;
+            createdAt?: {
+                $gte?: Date;
+                $lte?: Date;
+            };
+        } = {
+            memberId: member._id,
+        };
+
+        if (query.type) {
+            filter.type = query.type;
+        }
+
+        if (query.status) {
+            filter.status = query.status;
+        }
+
+        if (query.from || query.to) {
+            filter.createdAt = {};
+
+            if (query.from) {
+                filter.createdAt.$gte = new Date(query.from);
+            }
+
+            if (query.to) {
+                filter.createdAt.$lte = new Date(query.to);
+            }
+        }
+
+        const [orders, total] = await Promise.all([
+            this.orderModel
+                .find(filter)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .exec(),
+
+            this.orderModel.countDocuments(filter).exec(),
+        ]);
+
+        return {
+            data: orders.map((order) => toOrderResponse(order)),
             pagination: {
                 page,
                 limit,

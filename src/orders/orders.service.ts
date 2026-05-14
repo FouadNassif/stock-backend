@@ -12,9 +12,10 @@ import { BuyOrderDto } from './dto/buy-order.dto';
 import { SellOrderDto } from './dto/sell-order.dto';
 import { ListOrdersQueryDto } from './dto/list-orders-query.dto';
 import { TransactionStatus, TransactionType } from 'src/wallet/types/transaction.type';
+import { toOrderResponse } from './mappers/order.mappers';
 
 
-type OrderResponse = {
+export type OrderResponse = {
     id: string;
     memberId: string;
     stockId: string;
@@ -252,7 +253,7 @@ export class OrdersService {
                 response = {
                     message: 'Buy order completed successfully',
                     walletBalance: eligibleMember.walletBalance,
-                    order: this.toOrderResponse(order),
+                    order: toOrderResponse(order),
                     position: this.toPositionResponse(position),
                 };
 
@@ -404,7 +405,7 @@ export class OrdersService {
                 response = {
                     message: 'Sell order completed successfully',
                     walletBalance: eligibleMember.walletBalance,
-                    order: this.toOrderResponse(order),
+                    order: toOrderResponse(order),
                     position: this.toPositionResponse(position),
                 };
 
@@ -589,23 +590,6 @@ export class OrdersService {
                 total,
                 totalPages: Math.ceil(total / limit),
             },
-        };
-    }
-
-    private toOrderResponse(order: OrderDocument): OrderResponse {
-        return {
-            id: order._id.toString(),
-            memberId: order.memberId.toString(),
-            stockId: order.stockId.toString(),
-            positionId: order.positionId.toString(),
-            type: order.type,
-            quantity: order.quantity,
-            priceAtExecution: order.priceAtExecution,
-            totalAmount: order.totalAmount,
-            status: order.status,
-            realizedProfitLoss: order.realizedProfitLoss,
-            createdAt: order.createdAt,
-            updatedAt: order.updatedAt,
         };
     }
 
