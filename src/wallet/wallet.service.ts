@@ -31,6 +31,8 @@ import { TransactionStatus, TransactionType } from './types/transaction.type';
 import { AuditLogsService } from 'src/audit-logs/audit-logs.service';
 import { AuditActorType, AuditLogAction, AuditTargetType } from 'src/audit-logs/types/audit-log-action.type';
 import { PaymentsService } from 'src/payments/payments.service';
+import { NotificationEventType } from 'src/messaging/types/notification-event.type';
+import { MessagingService } from 'src/messaging/messaging.service';
 
 type TransactionFilter = {
     memberId: Types.ObjectId;
@@ -60,6 +62,7 @@ export class WalletService {
         private readonly auditLogsService: AuditLogsService,
 
         private readonly paymentsService: PaymentsService,
+        private readonly messagingService: MessagingService,
     ) { }
 
     async deposit(
@@ -451,12 +454,15 @@ export class WalletService {
             await session.endSession();
         }
 
-        await this.notificationsService.sendWithdrawalApprovedEmail(
-            emailPayload.email,
-            emailPayload.fullName,
-            emailPayload.amount,
-            emailPayload.walletBalance,
-        );
+        await this.messagingService.publishNotification({
+            type: NotificationEventType.WithdrawalApprovedEmailRequested,
+            payload: {
+                email: emailPayload.email,
+                fullName: emailPayload.fullName,
+                amount: emailPayload.amount,
+                newBalance: emailPayload.walletBalance,
+            },
+        });
 
         return response;
     }
@@ -498,12 +504,15 @@ export class WalletService {
 
         await withdrawal.save();
 
-        await this.notificationsService.sendWithdrawalRejectedEmail(
-            eligibleMember.email,
-            eligibleMember.fullName,
-            withdrawal.amount,
-            dto.reason,
-        );
+        await this.messagingService.publishNotification({
+            type: NotificationEventType.WithdrawalRejectedEmailRequested,
+            payload: {
+                email: eligibleMember.email,
+                fullName: eligibleMember.fullName,
+                amount: withdrawal.amount,
+                reason: dto.reason,
+            },
+        });
 
         await this.auditLogsService.create({
             actorId: currentAdminId,

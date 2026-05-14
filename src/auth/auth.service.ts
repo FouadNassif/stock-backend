@@ -31,6 +31,8 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { RedisService } from 'src/common/redis/redis.service';
 import { AuthRateLimitAction, buildAuthComboRateLimitKey, buildAuthIpRateLimitKey } from './utils/auth-rate-limit.util';
 import { throwRateLimitException } from 'src/common/exceptions/rate-limit.exception';
+import { NotificationEventType } from 'src/messaging/types/notification-event.type';
+import { MessagingService } from 'src/messaging/messaging.service';
 
 
 @Injectable()
@@ -50,6 +52,7 @@ export class AuthService {
         private readonly notificationsService: NotificationsService,
         private readonly referralsService: ReferralsService,
         private readonly redisService: RedisService,
+        private readonly messagingService: MessagingService,
     ) { }
 
     async register(dto: RegisterDto, referralCode: string | undefined, ipAddress: string): Promise<{ memberId: string; verificationId: string; message: string }> {
@@ -368,11 +371,14 @@ export class AuthService {
             maxAttempts: 5,
         });
 
-        await this.notificationsService.sendPasswordResetOtpEmail(
-            member.email,
-            member.fullName,
-            code,
-        );
+        await this.messagingService.publishNotification({
+            type: NotificationEventType.PasswordResetOtpEmailRequested,
+            payload: {
+                email: member.email,
+                fullName: member.fullName,
+                code,
+            },
+        });
 
         return {
             verificationId,
@@ -532,7 +538,14 @@ export class AuthService {
             maxAttempts: 3,
         });
 
-        await this.notificationsService.sendOtp(member.email, code);
+
+        await this.messagingService.publishNotification({
+            type: NotificationEventType.OtpEmailRequested,
+            payload: {
+                email: member.email,
+                code,
+            },
+        });
 
         return verificationId;
     }

@@ -9,6 +9,8 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { Transaction, TransactionDocument } from '../wallet/schemas/transaction.schema';
 import { generateTransactionReference } from 'src/wallet/utils/transaction.utils';
 import { TransactionStatus, TransactionType } from 'src/wallet/types/transaction.type';
+import { MessagingService } from 'src/messaging/messaging.service';
+import { NotificationEventType } from 'src/messaging/types/notification-event.type';
 
 type StripeClient = InstanceType<typeof Stripe>;
 
@@ -34,6 +36,7 @@ export class PaymentsService {
         private readonly transactionModel: Model<TransactionDocument>,
 
         private readonly notificationsService: NotificationsService,
+        private readonly messagingService: MessagingService,
     ) {
         this.stripe = new Stripe(this.configService.getOrThrow<string>('STRIPE_SECRET_KEY'));
     }
@@ -232,12 +235,15 @@ export class PaymentsService {
         }
 
         if (emailPayload) {
-            await this.notificationsService.sendWalletCreditEmail(
-                emailPayload.email,
-                emailPayload.fullName,
-                emailPayload.amount,
-                emailPayload.walletBalance,
-            );
+            await this.messagingService.publishNotification({
+                type: NotificationEventType.WalletCreditEmailRequested,
+                payload: {
+                    email: emailPayload.email,
+                    fullName: emailPayload.fullName,
+                    amount: emailPayload.amount,
+                    newBalance: emailPayload.walletBalance,
+                },
+            });
         }
     }
 
