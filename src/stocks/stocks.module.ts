@@ -4,9 +4,11 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { StocksService } from './stocks.service';
 import { Stock, StockSchema } from './schemas/stock.schema';
 import { PriceHistory, PriceHistorySchema } from './schemas/price-history.schema';
+import { AlertsModule } from 'src/alerts/alerts.module';
 
 @Module({
   imports: [
+    AlertsModule,
     MongooseModule.forFeature([
       {
         name: Stock.name,
