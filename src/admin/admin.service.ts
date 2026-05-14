@@ -154,9 +154,9 @@ export class AdminService implements OnModuleInit {
         await this.messagingService.publishNotification({
             type: NotificationEventType.NewAdminEmailRequested,
             payload: {
-                newAdmin.email,
-                newAdmin.fullName,
-                temporaryPassword,
+                email: newAdmin.email,
+                fullName: newAdmin.fullName,
+                tempPassword: temporaryPassword,
             },
         });
 
