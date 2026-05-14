@@ -1,37 +1,37 @@
 export function buildTradeConfirmationEmailTemplate(params: {
-    fullName: string;
-    type: 'buy' | 'sell';
-    ticker: string;
-    companyName: string;
-    quantity: number;
-    priceAtExecution: number;
-    totalAmount: number;
-    walletBalance: number;
-    realizedProfitLoss?: number;
+  fullName: string;
+  type: 'buy' | 'sell';
+  ticker: string;
+  companyName: string;
+  quantity: number;
+  priceAtExecution: number;
+  totalAmount: number;
+  walletBalance: number;
+  realizedProfitLoss?: number;
 }): string {
-    const {
-        fullName,
-        type,
-        ticker,
-        companyName,
-        quantity,
-        priceAtExecution,
-        totalAmount,
-        walletBalance,
-        realizedProfitLoss,
-    } = params;
+  const {
+    fullName,
+    type,
+    ticker,
+    companyName,
+    quantity,
+    priceAtExecution,
+    totalAmount,
+    walletBalance,
+    realizedProfitLoss,
+  } = params;
 
-    const isBuy = type === 'buy';
+  const isBuy = type === 'buy';
 
-    const title = isBuy ? 'Buy Order Completed' : 'Sell Order Completed';
-    const subtitle = isBuy
-        ? 'Your buy order was executed successfully.'
-        : 'Your sell order was executed successfully.';
+  const title = isBuy ? 'Buy Order Completed' : 'Sell Order Completed';
+  const subtitle = isBuy
+    ? 'Your buy order was executed successfully.'
+    : 'Your sell order was executed successfully.';
 
-    const badgeText = isBuy ? 'BUY' : 'SELL';
+  const badgeText = isBuy ? 'BUY' : 'SELL';
 
-    const pnlSection = !isBuy
-        ? `
+  const pnlSection = !isBuy
+    ? `
       <tr>
         <td style="padding:12px 0; color:#64748b; font-size:14px;">
           Realized Profit / Loss
@@ -41,9 +41,9 @@ export function buildTradeConfirmationEmailTemplate(params: {
         </td>
       </tr>
     `
-        : '';
+    : '';
 
-    return `
+  return `
     <!DOCTYPE html>
     <html lang="en">
       <head>
@@ -73,8 +73,8 @@ export function buildTradeConfirmationEmailTemplate(params: {
                   <td style="padding:36px 32px 24px;">
                     <div style="text-align:center; margin-bottom:24px;">
                       <span style="display:inline-block; padding:8px 16px; border-radius:999px; background-color:${isBuy ? '#dcfce7' : '#dbeafe'
-        }; color:${isBuy ? '#166534' : '#1e40af'
-        }; font-size:13px; font-weight:800; letter-spacing:1px;">
+    }; color:${isBuy ? '#166534' : '#1e40af'
+    }; font-size:13px; font-weight:800; letter-spacing:1px;">
                         ${badgeText}
                       </span>
                     </div>

@@ -3,9 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
 import { buildOtpEmailTemplate, buildPasswordResetOtpEmailTemplate } from './templates/otp.template';
-import { buildIdentityApprovedEmailTemplate, buildIdentityRejectedEmailTemplate, buildMemberSuspendedEmailTemplate, buildNewAdminEmailTemplate } from './templates/admin.template';
+import { buildIdentityApprovedEmailTemplate, buildIdentityRejectedEmailTemplate, buildMemberSuspendedEmailTemplate, buildNewAdminEmailTemplate } from './templates/admin.template.template';
 import { buildWalletCreditEmailTemplate, buildWithdrawalApprovedEmailTemplate, buildWithdrawalRejectedEmailTemplate } from './templates/transaction.template';
-import { buildTradeConfirmationEmailTemplate } from './templates/order.template';
+import { buildTradeConfirmationEmailTemplate } from './templates/order.template.template';
+import { buildPriceAlertEmailTemplate } from './templates/notifications.template';
 
 @Injectable()
 export class NotificationsService {
@@ -192,6 +193,26 @@ export class NotificationsService {
       subject: 'Account Suspended',
       text: `Dear ${fullName}, your account has been suspended. Reason: ${reason}`,
       html: buildMemberSuspendedEmailTemplate({ fullName, reason }),
+    });
+  }
+
+  async sendPriceAlertEmail(params: {
+    email: string;
+    fullName: string;
+    ticker: string;
+    companyName: string;
+    targetPrice: number;
+    currentPrice: number;
+    direction: 'above' | 'below';
+  }): Promise<void> {
+    const from = this.configService.getOrThrow<string>('MAIL_FROM');
+
+    await this.transporter.sendMail({
+      from,
+      to: params.email,
+      subject: `Price Alert Triggered: ${params.ticker}`,
+      text: `Dear ${params.fullName}, your price alert for ${params.ticker} has been triggered. Current price is $${params.currentPrice}.`,
+      html: buildPriceAlertEmailTemplate(params),
     });
   }
 

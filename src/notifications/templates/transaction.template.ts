@@ -1,11 +1,11 @@
 export function buildWalletCreditEmailTemplate(params: {
-    fullName: string;
-    amount: number;
-    newBalance: number;
+  fullName: string;
+  amount: number;
+  newBalance: number;
 }): string {
-    const { fullName, amount, newBalance } = params;
+  const { fullName, amount, newBalance } = params;
 
-    return `
+  return `
     <!DOCTYPE html>
     <html lang="en">
       <head>
@@ -85,13 +85,13 @@ export function buildWalletCreditEmailTemplate(params: {
 }
 
 export function buildWithdrawalApprovedEmailTemplate(params: {
-    fullName: string;
-    amount: number;
-    newBalance: number;
+  fullName: string;
+  amount: number;
+  newBalance: number;
 }): string {
-    const { fullName, amount, newBalance } = params;
+  const { fullName, amount, newBalance } = params;
 
-    return `
+  return `
     <!DOCTYPE html>
     <html lang="en">
       <head>
@@ -171,13 +171,13 @@ export function buildWithdrawalApprovedEmailTemplate(params: {
 }
 
 export function buildWithdrawalRejectedEmailTemplate(params: {
-    fullName: string;
-    amount: number;
-    reason: string;
+  fullName: string;
+  amount: number;
+  reason: string;
 }): string {
-    const { fullName, amount, reason } = params;
+  const { fullName, amount, reason } = params;
 
-    return `
+  return `
     <!DOCTYPE html>
     <html lang="en">
       <head>

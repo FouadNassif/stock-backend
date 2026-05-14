@@ -15,6 +15,10 @@ import { RedisModule } from './common/redis/redis.module';
 import { AuditLogsModule } from './audit-logs/audit-logs.module';
 import { AuditLogsService } from './audit-logs/audit-logs.service';
 import { PaymentsModule } from './payments/payments.module';
+import { MessagingModule } from './messaging/messaging.module';
+import { AlertsService } from './alerts/alerts.service';
+import { AlertsController } from './alerts/alerts.controller';
+import { AlertsModule } from './alerts/alerts.module';
 
 @Module({
   imports: [
@@ -41,6 +45,9 @@ import { PaymentsModule } from './payments/payments.module';
     OrdersModule,
     AuditLogsModule,
     PaymentsModule,
+    MessagingModule,
+    AlertsModule,
   ],
+  controllers: [AlertsController],
 })
 export class AppModule { }

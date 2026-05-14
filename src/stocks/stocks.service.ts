@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 
@@ -9,6 +9,7 @@ import { PriceHistory, PriceHistoryDocument } from './schemas/price-history.sche
 import { Stock, StockDocument } from './schemas/stock.schema';
 import { AuditLogsService } from 'src/audit-logs/audit-logs.service';
 import { AuditActorType, AuditLogAction, AuditTargetType } from 'src/audit-logs/types/audit-log-action.type';
+import { AlertsService } from 'src/alerts/alerts.service';
 
 type StockFilter = {
     sector?: string;
@@ -42,6 +43,8 @@ export class StocksService {
         private readonly priceHistoryModel: Model<PriceHistoryDocument>,
 
         private readonly auditLogsService: AuditLogsService,
+
+        private readonly alertsService: AlertsService,
     ) { }
 
     async createStock(
@@ -194,34 +197,67 @@ export class StocksService {
         currentAdminId: string,
         dto: UpdateStockDto,
     ): Promise<{ message: string; stock: StockResponse }> {
-
-
-        if (!dto.companyName && !dto.sector && dto.currentPrice === undefined && !dto.description) {
-            throw new NotFoundException('No update data provided');
+        if (dto.companyName === undefined && dto.sector === undefined &&
+            dto.currentPrice === undefined && dto.description === undefined) {
+            throw new BadRequestException('No update data provided');
         }
+
         const stock = await this.stockModel.findById(id).exec();
 
         if (!stock) {
             throw new NotFoundException('Stock not found');
         }
 
-        const oldPrice = stock.currentPrice;
-        const isPriceChanged = typeof dto.currentPrice === 'number' && dto.currentPrice !== oldPrice;
+        const previousValues = {
+            companyName: stock.companyName,
+            sector: stock.sector,
+            currentPrice: stock.currentPrice,
+            description: stock.description,
+        };
 
-        if (dto.companyName !== undefined) {
+        const changes: Record<string, { before?: unknown; after?: unknown }> = {};
+
+        if (dto.companyName !== undefined && dto.companyName !== previousValues.companyName) {
+            changes.companyName = {
+                before: previousValues.companyName,
+                after: dto.companyName,
+            };
+
             stock.companyName = dto.companyName;
         }
 
-        if (dto.sector !== undefined) {
+        if (dto.sector !== undefined && dto.sector !== previousValues.sector) {
+            changes.sector = {
+                before: previousValues.sector,
+                after: dto.sector,
+            };
+
             stock.sector = dto.sector;
         }
 
-        if (dto.description !== undefined) {
+        if (dto.description !== undefined && dto.description !== previousValues.description) {
+            changes.description = {
+                before: previousValues.description,
+                after: dto.description,
+            };
+
             stock.description = dto.description;
         }
 
-        if (dto.currentPrice !== undefined) {
-            stock.currentPrice = dto.currentPrice;
+        const newPrice = dto.currentPrice;
+
+        const isPriceChanged = typeof newPrice === 'number' && newPrice !== previousValues.currentPrice;
+
+        if (isPriceChanged) {
+            changes.currentPrice = {
+                before: previousValues.currentPrice,
+                after: newPrice,
+            };
+            stock.currentPrice = newPrice;
+        }
+
+        if (Object.keys(changes).length === 0) {
+            throw new BadRequestException('No stock fields were changed');
         }
 
         await stock.save();
@@ -232,52 +268,23 @@ export class StocksService {
                 price: stock.currentPrice,
                 recordedAt: new Date(),
             });
+
+            await this.alertsService.checkAndTriggerAlertsForStock(stock._id.toString());
         }
 
-        const changes: Record<string, { before?: unknown; after?: unknown }> = {};
-
-        if (dto.companyName !== undefined && dto.companyName !== stock.companyName) {
-            changes.companyName = {
-                before: stock.companyName,
-                after: dto.companyName,
-            };
-        }
-
-        if (dto.sector !== undefined && dto.sector !== stock.sector) {
-            changes.sector = {
-                before: stock.sector,
-                after: dto.sector,
-            };
-        }
-
-        if (dto.currentPrice !== undefined && dto.currentPrice !== stock.currentPrice) {
-            changes.currentPrice = {
-                before: stock.currentPrice,
-                after: dto.currentPrice,
-            };
-        }
-
-        if (dto.description !== undefined && dto.description !== stock.description) {
-            changes.description = {
-                before: stock.description,
-                after: dto.description,
-            };
-        }
-        if (Object.keys(changes).length > 0) {
-            await this.auditLogsService.create({
-                actorId: currentAdminId,
-                actorType: AuditActorType.Admin,
-                action: AuditLogAction.StockUpdated,
-                targetType: AuditTargetType.Stock,
-                targetId: stock._id.toString(),
-                description: 'Stock updated by admin/analyst',
-                changes,
-                metadata: {
-                    ticker: stock.ticker,
-                    companyName: stock.companyName,
-                },
-            });
-        }
+        await this.auditLogsService.create({
+            actorId: currentAdminId,
+            actorType: AuditActorType.Admin,
+            action: AuditLogAction.StockUpdated,
+            targetType: AuditTargetType.Stock,
+            targetId: stock._id.toString(),
+            description: 'Stock updated by admin/analyst',
+            changes,
+            metadata: {
+                ticker: stock.ticker,
+                companyName: stock.companyName,
+            },
+        });
 
         return {
             message: 'Stock updated successfully',
