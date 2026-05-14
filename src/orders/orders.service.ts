@@ -440,9 +440,6 @@ export class OrdersService {
                 payload: emailPayload,
             });
         }
-
-        await this.notificationsService.sendTradeConfirmationEmail(emailPayload);
-
         return response;
     }
 
