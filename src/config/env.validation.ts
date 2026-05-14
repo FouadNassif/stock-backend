@@ -55,4 +55,7 @@ export const envValidationSchema = Joi.object({
     STRIPE_CURRENCY: Joi.string().default('usd'),
     STRIPE_SUCCESS_URL: Joi.string().uri().required(),
     STRIPE_CANCEL_URL: Joi.string().uri().required(),
+
+    RABBITMQ_URL: Joi.string().required(),
+    RABBITMQ_NOTIFICATION_QUEUE: Joi.string().default('notification_events'),
 });
