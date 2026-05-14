@@ -17,8 +17,6 @@ import { IdentityStatus, Member, MemberDocument } from '../members/schemas/membe
 import { RejectIdentityDto } from './dto/reject-identity.dto';
 import { ListMembersQueryDto } from './dto/list-members-query.dto';
 import { MemberStatusDto } from './dto/member-status-dto';
-import { Connection } from 'mongoose';
-import { SuspendMemberDto } from './dto/suspend-member.dto';
 import { Transaction, TransactionDocument } from '../wallet/schemas/transaction.schema';
 import { ManualWalletAdjustmentDto, WalletAdjustmentType } from './dto/manual-wallet-adjustment.dto';
 import { generateTransactionReference } from '../wallet/utils/transaction.utils';
