@@ -12,6 +12,7 @@ import { StocksModule } from './stocks/stocks.module';
 import { WalletModule } from './wallet/wallet.module';
 import { OrdersModule } from './orders/orders.module';
 import { RedisModule } from './common/redis/redis.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { RedisModule } from './common/redis/redis.module';
     StocksModule,
     WalletModule,
     OrdersModule,
+    PaymentsModule,
   ],
 })
 export class AppModule { }

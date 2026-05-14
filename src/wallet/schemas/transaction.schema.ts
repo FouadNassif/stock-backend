@@ -37,6 +37,12 @@ export class Transaction {
     balanceAfter!: number;
 
     @Prop()
+    stripeSessionId?: string;
+
+    @Prop()
+    stripePaymentIntentId?: string;
+
+    @Prop()
     rejectedReason?: string;
 
     @Prop()
@@ -50,3 +56,5 @@ TransactionSchema.index({ memberId: 1, type: 1 });
 TransactionSchema.index({ status: 1 });
 TransactionSchema.index({ type: 1 });
 TransactionSchema.index({ referenceId: 1 }, { unique: true });
+TransactionSchema.index({ stripeSessionId: 1 });
+TransactionSchema.index({ stripePaymentIntentId: 1 });

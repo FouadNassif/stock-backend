@@ -28,6 +28,7 @@ import { TransactionResponse, WithdrawalFilter } from './types/transaction-respo
 import { toTransactionResponse } from './mappers/transaction.mapper';
 import { generateTransactionReference } from './utils/transaction.utils';
 import { TransactionStatus, TransactionType } from './types/transaction.type';
+import { PaymentsService } from 'src/payments/payments.service';
 
 type TransactionFilter = {
     memberId: Types.ObjectId;
@@ -54,6 +55,8 @@ export class WalletService {
         private readonly memberModel: Model<MemberDocument>,
 
         private readonly notificationsService: NotificationsService,
+
+        private readonly paymentsService: PaymentsService,
     ) { }
 
     async deposit(
@@ -61,45 +64,19 @@ export class WalletService {
         dto: DepositDto,
     ): Promise<{
         message: string;
-        walletBalance: number;
-        transaction: TransactionResponse;
+        checkoutUrl: string;
+        transactionId: string;
     }> {
-        const member = await this.memberModel.findById(currentMemberId).exec();
-        const eligibleMember = checkMemberEligibility(member, true);
-
-        const balanceBefore = eligibleMember.walletBalance;
-        const balanceAfter = balanceBefore + dto.amount;
-
-        const transaction = await this.transactionModel.create({
-            memberId: eligibleMember._id,
-            type: TransactionType.Deposit,
-            amount: dto.amount,
-            status: TransactionStatus.Pending,
-            referenceId: generateTransactionReference(TransactionType.Deposit),
-            notes: 'Deposit simulated as successful payment',
-            balanceBefore,
-            balanceAfter,
-        });
-
-        eligibleMember.walletBalance = balanceAfter;
-        eligibleMember.lastDepositAt = new Date();
-        await eligibleMember.save();
-
-        transaction.status = TransactionStatus.Completed;
-        transaction.processedAt = new Date();
-        await transaction.save();
-
-        await this.notificationsService.sendWalletCreditEmail(
-            eligibleMember.email,
-            eligibleMember.fullName,
-            dto.amount,
-            eligibleMember.walletBalance,
-        );
+        const checkoutSession =
+            await this.paymentsService.createDepositCheckoutSession({
+                memberId: currentMemberId,
+                amount: dto.amount,
+            });
 
         return {
-            message: 'Deposit completed successfully',
-            walletBalance: eligibleMember.walletBalance,
-            transaction: toTransactionResponse(transaction),
+            message: 'Stripe checkout session created successfully',
+            checkoutUrl: checkoutSession.checkoutUrl,
+            transactionId: checkoutSession.transactionId,
         };
     }
 

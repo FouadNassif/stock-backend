@@ -12,17 +12,24 @@ import { AdminJwtStrategy } from './strategies/admin-jwt.strategy';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { WalletModule } from '../wallet/wallet.module';
 import { Member, MemberSchema } from '../members/schemas/member.schema';
+import { Transaction, TransactionSchema } from 'src/wallet/schemas/transaction.schema';
+import { OrdersModule } from 'src/orders/orders.module';
 
 @Module({
   imports: [
     PassportModule,
     NotificationsModule,
     WalletModule,
+    OrdersModule,
 
     MongooseModule.forFeature([
       {
         name: Admin.name,
         schema: AdminSchema,
+      },
+      {
+        name: Transaction.name,
+        schema: TransactionSchema,
       },
       {
         name: Member.name,
