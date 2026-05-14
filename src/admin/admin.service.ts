@@ -29,6 +29,8 @@ import { Order, OrderDocument } from '../orders/schemas/order.schema';
 import { ListTransactionsQueryDto } from '../wallet/dto/list-transactions-query.dto';
 import { ListOrdersQueryDto } from '../orders/dto/list-orders-query.dto';
 import { toOrderResponse } from '../orders/mappers/order.mappers';
+import { MessagingService } from 'src/messaging/messaging.service';
+import { NotificationEventType } from 'src/messaging/types/notification-event.type';
 
 type AdminListFilter = {
     role?: AdminRole;
@@ -72,6 +74,7 @@ export class AdminService implements OnModuleInit {
         private readonly jwtService: JwtService,
         private readonly notificationsService: NotificationsService,
         private readonly auditLogsService: AuditLogsService,
+        private readonly messagingService: MessagingService,
     ) { }
 
     async onModuleInit(): Promise<void> {
@@ -148,11 +151,14 @@ export class AdminService implements OnModuleInit {
             createdBy: currentAdminId,
         });
 
-        await this.notificationsService.sendNewAdminEmail(
-            newAdmin.email,
-            temporaryPassword,
-            newAdmin.fullName,
-        );
+        await this.messagingService.publishNotification({
+            type: NotificationEventType.NewAdminEmailRequested,
+            payload: {
+                email: newAdmin.email,
+                fullName: newAdmin.fullName,
+                tempPassword: temporaryPassword,
+            },
+        });
 
         await this.auditLogsService.create({
             actorId: currentAdminId,
@@ -590,10 +596,13 @@ export class AdminService implements OnModuleInit {
         member.identityStatus = IdentityStatus.Approved;
         await member.save();
 
-        await this.notificationsService.sendIdentityApprovedEmail(
-            member.email,
-            member.fullName,
-        );
+        await this.messagingService.publishNotification({
+            type: NotificationEventType.IdentityApprovedEmailRequested,
+            payload: {
+                email: member.email,
+                fullName: member.fullName,
+            },
+        });
 
         await this.auditLogsService.create({
             actorId: currentAdminId,
@@ -634,11 +643,14 @@ export class AdminService implements OnModuleInit {
         member.identityStatus = IdentityStatus.Rejected;
         await member.save();
 
-        await this.notificationsService.sendIdentityRejectedEmail(
-            member.email,
-            member.fullName,
-            dto.reason,
-        );
+        await this.messagingService.publishNotification({
+            type: NotificationEventType.IdentityRejectedEmailRequested,
+            payload: {
+                email: member.email,
+                fullName: member.fullName,
+                reason: dto.reason,
+            },
+        });
 
         await this.auditLogsService.create({
             actorId: currentAdminId,
@@ -727,11 +739,14 @@ export class AdminService implements OnModuleInit {
         member.isActive = false;
         await member.save();
 
-        await this.notificationsService.sendMemberSuspendedEmail(
-            member.email,
-            member.fullName,
-            dto.reason,
-        );
+        await this.messagingService.publishNotification({
+            type: NotificationEventType.MemberSuspendedEmailRequested,
+            payload: {
+                email: member.email,
+                fullName: member.fullName,
+                reason: dto.reason,
+            },
+        });
 
         await this.auditLogsService.create({
             actorId: currentAdminId,

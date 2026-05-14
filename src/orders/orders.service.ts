@@ -13,6 +13,8 @@ import { SellOrderDto } from './dto/sell-order.dto';
 import { ListOrdersQueryDto } from './dto/list-orders-query.dto';
 import { TransactionStatus, TransactionType } from 'src/wallet/types/transaction.type';
 import { toOrderResponse } from './mappers/order.mappers';
+import { NotificationEventType } from 'src/messaging/types/notification-event.type';
+import { MessagingService } from 'src/messaging/messaging.service';
 
 
 export type OrderResponse = {
@@ -117,6 +119,7 @@ export class OrdersService {
         @InjectModel('Transaction')
         private readonly transactionModel: Model<TransactionDocument>,
         private readonly notificationsService: NotificationsService,
+        private readonly messagingService: MessagingService,
     ) { }
 
     async buyStock(
@@ -150,11 +153,12 @@ export class OrdersService {
             realizedProfitLoss: number;
         };
 
+        let eligibleMember = null;
         try {
             await session.withTransaction(async () => {
                 const member = await this.memberModel.findById(currentMemberId).session(session).exec();
 
-                const eligibleMember = checkMemberEligibility(member, true);
+                eligibleMember = checkMemberEligibility(member, true);
 
                 const stock = await this.stockModel.findById(dto.stockId).session(session).exec();
 
@@ -273,8 +277,12 @@ export class OrdersService {
         } finally {
             await session.endSession();
         }
-
-        await this.notificationsService.sendTradeConfirmationEmail(emailPayload);
+        if (emailPayload) {
+            await this.messagingService.publishNotification({
+                type: NotificationEventType.TradeConfirmationEmailRequested,
+                payload: emailPayload,
+            });
+        }
 
         return response;
     }
@@ -426,8 +434,12 @@ export class OrdersService {
             await session.endSession();
         }
 
-        await this.notificationsService.sendTradeConfirmationEmail(emailPayload);
-
+        if (emailPayload) {
+            await this.messagingService.publishNotification({
+                type: NotificationEventType.TradeConfirmationEmailRequested,
+                payload: emailPayload,
+            });
+        }
         return response;
     }
 
