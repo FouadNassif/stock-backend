@@ -14,6 +14,7 @@ import { OrdersModule } from './orders/orders.module';
 import { RedisModule } from './common/redis/redis.module';
 import { AuditLogsModule } from './audit-logs/audit-logs.module';
 import { AuditLogsService } from './audit-logs/audit-logs.service';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { AuditLogsService } from './audit-logs/audit-logs.service';
     WalletModule,
     OrdersModule,
     AuditLogsModule,
+    PaymentsModule,
   ],
 })
 export class AppModule { }

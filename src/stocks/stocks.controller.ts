@@ -25,19 +25,6 @@ import { AnyAuthGuard } from 'src/common/guards/any-auth.guard';
 export class StocksController {
     constructor(private readonly stocksService: StocksService) { }
 
-    @Post('/create')
-    @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-    @AdminRoles(AdminRole.Admin, AdminRole.Analyst)
-    createStock(
-        @CurrentAdmin() currentAdmin: AdminJwtPayload,
-        @Body() dto: CreateStockDto,
-    ): Promise<{
-        message: string;
-        stock: StockResponse;
-    }> {
-        return this.stocksService.createStock(currentAdmin.sub, dto);
-    }
-
     @Get()
     listStocks(@Query() query: ListStocksQueryDto) {
         return this.stocksService.listStocks(query);
@@ -51,6 +38,19 @@ export class StocksController {
     @Get(':ticker/history')
     getStockHistory(@Param('ticker') ticker: string) {
         return this.stocksService.getStockHistory(ticker);
+    }
+
+    @Post('/create')
+    @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+    @AdminRoles(AdminRole.Admin, AdminRole.Analyst)
+    createStock(
+        @CurrentAdmin() currentAdmin: AdminJwtPayload,
+        @Body() dto: CreateStockDto,
+    ): Promise<{
+        message: string;
+        stock: StockResponse;
+    }> {
+        return this.stocksService.createStock(currentAdmin.sub, dto);
     }
 
     @Patch(':id/update')

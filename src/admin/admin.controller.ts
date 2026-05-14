@@ -18,6 +18,8 @@ import { ListMembersQueryDto } from './dto/list-members-query.dto';
 import { ObjectIdPipe } from 'src/common/pipes/object-id.pipe';
 import { ManualWalletAdjustmentDto } from './dto/manual-wallet-adjustment.dto';
 import { MemberStatusDto } from './dto/member-status-dto';
+import { ListTransactionsQueryDto } from 'src/wallet/dto/list-transactions-query.dto';
+import { ListOrdersQueryDto } from 'src/orders/dto/list-orders-query.dto';
 
 
 @Controller('admin')
@@ -69,16 +71,41 @@ export class AdminController {
         return this.adminService.listMembers(query);
     }
 
+    @Get('members/:id')
+    @AdminRoles(AdminRole.Support)
+    getMemberById(@Param('id', ObjectIdPipe) id: string) {
+        return this.adminService.getMemberById(id);
+    }
+
+    @Get('members/:id/transactions')
+    @AdminRoles(AdminRole.Support)
+    getMemberTransactions(
+        @Param('id', ObjectIdPipe) id: string,
+        @Query() query: ListTransactionsQueryDto,
+    ) {
+        return this.adminService.getMemberTransactions(id, query);
+    }
+
+    @Get('members/:id/orders')
+    @AdminRoles(AdminRole.Support)
+    getMemberOrders(
+        @Param('id', ObjectIdPipe) id: string,
+        @Query() query: ListOrdersQueryDto,
+    ) {
+        return this.adminService.getMemberOrders(id, query);
+    }
+
+
     @Get('withdrawals')
     @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-    @AdminRoles(AdminRole.Admin)
+    @AdminRoles(AdminRole.Admin, AdminRole.Support)
     listWithdrawals(@Query() query: ListWithdrawalsQueryDto) {
         return this.walletService.listWithdrawals(query);
     }
 
     @Post('withdrawals/:id/approve')
     @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-    @AdminRoles(AdminRole.Admin)
+    @AdminRoles(AdminRole.Admin, AdminRole.Support)
     approveWithdrawal(
         @Param('id', ObjectIdPipe) id: string,
         @CurrentAdmin() currentAdmin: AdminJwtPayload,
@@ -88,7 +115,7 @@ export class AdminController {
 
     @Post('withdrawals/:id/reject')
     @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-    @AdminRoles(AdminRole.Admin)
+    @AdminRoles(AdminRole.Admin, AdminRole.Support)
     rejectWithdrawal(
         @Param('id', ObjectIdPipe) id: string,
         @CurrentAdmin() currentAdmin: AdminJwtPayload,
