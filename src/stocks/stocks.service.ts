@@ -302,6 +302,9 @@ export class StocksService {
         if (!stock) {
             throw new NotFoundException('Stock not found');
         }
+        if (stock.isListed === false) {
+            throw new BadRequestException('Stock is already delisted');
+        }
 
         stock.isListed = false;
         await stock.save();
