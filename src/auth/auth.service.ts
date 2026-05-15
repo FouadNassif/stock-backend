@@ -33,6 +33,7 @@ import { AuthRateLimitAction, buildAuthComboRateLimitKey, buildAuthIpRateLimitKe
 import { throwRateLimitException } from 'src/common/exceptions/rate-limit.exception';
 import { NotificationEventType } from 'src/messaging/types/notification-event.type';
 import { MessagingService } from 'src/messaging/messaging.service';
+import { PasswordSetupTokenPayload } from './types/src/auth/types/password-setup-token-payload.type';
 
 
 @Injectable()
@@ -55,7 +56,11 @@ export class AuthService {
         private readonly messagingService: MessagingService,
     ) { }
 
-    async register(dto: RegisterDto, referralCode: string | undefined, ipAddress: string): Promise<{ memberId: string; verificationId: string; message: string }> {
+    async register(
+        dto: RegisterDto,
+        referralCode: string | undefined,
+        ipAddress: string,
+    ): Promise<{ memberId: string; verificationId: string; message: string }> {
         const normalizedEmail = dto.email.toLowerCase();
 
         await this.redisRateCheckLimit(
@@ -73,8 +78,7 @@ export class AuthService {
         const existingMember = await this.memberModel
             .findOne({
                 $or: [{ email: normalizedEmail }, { nationalId: dto.nationalId }],
-            })
-            .exec();
+            }).exec();
 
         const existingAdmin = await this.adminModel.findOne({ email: normalizedEmail }).exec();
 
@@ -86,6 +90,20 @@ export class AuthService {
 
         if (!isAdult(dateOfBirth)) {
             throw new BadRequestException('Member must be at least 18 years old');
+        }
+
+        let validReferralCode: string | undefined;
+
+        if (referralCode) {
+            const normalizedReferralCode = referralCode.trim().toUpperCase();
+
+            const referrer = await this.memberModel.findOne({ referralCode: normalizedReferralCode }).exec();
+
+            if (!referrer || !referrer.isActive) {
+                throw new BadRequestException('Invalid referral code');
+            }
+
+            validReferralCode = normalizedReferralCode;
         }
 
         const memberReferralCode = await this.generateUniqueReferralCode(dto.fullName);
@@ -102,7 +120,7 @@ export class AuthService {
         });
 
         await this.referralsService.createReferralIfCodeProvided({
-            referralCode,
+            referralCode: validReferralCode,
             referredMemberId: member._id,
         });
 
@@ -115,7 +133,7 @@ export class AuthService {
         };
     }
 
-    async verifyOtp(dto: VerifyOtpDto, ipAddress: string): Promise<{ message: string }> {
+    async verifyOtp(dto: VerifyOtpDto, ipAddress: string): Promise<{ message: string, setupPasswordToken?: string; }> {
         await this.redisRateCheckLimit(
             dto.verificationId,
             ipAddress,
@@ -181,9 +199,19 @@ export class AuthService {
         member.emailVerified = true;
         await member.save();
 
+        const payload: PasswordSetupTokenPayload = {
+            sub: member._id.toString(),
+            email: member.email,
+            type: 'password-setup',
+        };
+
+        const setupPasswordToken = await this.jwtService.signAsync(payload, {
+            expiresIn: '15m',
+        });
 
         return {
             message: 'Email verified successfully. You can now set your password.',
+            setupPasswordToken
         };
     }
 
@@ -234,16 +262,36 @@ export class AuthService {
     }
 
     async setPassword(dto: SetPasswordDto): Promise<{ message: string }> {
-        const normalizedEmail = dto.email.toLowerCase();
+        let payload: PasswordSetupTokenPayload;
 
-        const member = await this.memberModel.findOne({ email: normalizedEmail }).exec();
+        try {
+            payload = await this.jwtService.verifyAsync<PasswordSetupTokenPayload>(
+                dto.setupPasswordToken,
+            );
+        } catch {
+            throw new UnauthorizedException('Invalid or expired password setup token');
+        }
+
+        if (payload.type !== 'password-setup') {
+            throw new UnauthorizedException('Invalid password setup token');
+        }
+
+        const member = await this.memberModel.findById(payload.sub).exec();
 
         if (!member) {
             throw new BadRequestException('Member not found');
         }
 
         if (!member.emailVerified) {
-            throw new ForbiddenException('Please verify your email before setting a password');
+            throw new ForbiddenException(
+                'Please verify your email before setting a password',
+            );
+        }
+
+        if (member.password) {
+            throw new BadRequestException(
+                'Password is already set. Please use change password or forgot password.',
+            );
         }
 
         member.password = await bcrypt.hash(dto.password, 10);
