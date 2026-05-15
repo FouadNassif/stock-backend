@@ -72,13 +72,15 @@ export class AdminController {
     }
 
     @Get('members/:id')
-    @AdminRoles(AdminRole.Support)
+    @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+    @AdminRoles(AdminRole.Admin, AdminRole.Support)
     getMemberById(@Param('id', ObjectIdPipe) id: string) {
         return this.adminService.getMemberById(id);
     }
 
     @Get('members/:id/transactions')
-    @AdminRoles(AdminRole.Support)
+    @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+    @AdminRoles(AdminRole.Admin, AdminRole.Support)
     getMemberTransactions(
         @Param('id', ObjectIdPipe) id: string,
         @Query() query: ListTransactionsQueryDto,
@@ -87,7 +89,8 @@ export class AdminController {
     }
 
     @Get('members/:id/orders')
-    @AdminRoles(AdminRole.Support)
+    @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+    @AdminRoles(AdminRole.Admin, AdminRole.Support)
     getMemberOrders(
         @Param('id', ObjectIdPipe) id: string,
         @Query() query: ListOrdersQueryDto,
