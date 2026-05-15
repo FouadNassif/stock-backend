@@ -334,6 +334,48 @@ export class StocksService {
         };
     }
 
+    async listStock(id: string, currentAdminId: string): Promise<{
+        message: string;
+        stock: StockResponse;
+    }> {
+
+        const stock = await this.stockModel.findById(id).exec();
+
+        if (!stock) {
+            throw new NotFoundException('Stock not found');
+        }
+        if (stock.isListed === true) {
+            throw new BadRequestException('Stock is already listed');
+        }
+
+        stock.isListed = true;
+        await stock.save();
+
+        await this.auditLogsService.create({
+            actorId: currentAdminId,
+            actorType: AuditActorType.Admin,
+            action: AuditLogAction.StockListed,
+            targetType: AuditTargetType.Stock,
+            targetId: stock._id.toString(),
+            description: 'Stock listed by admin/analyst',
+            changes: {
+                isListed: {
+                    before: false,
+                    after: true,
+                },
+            },
+            metadata: {
+                ticker: stock.ticker,
+                companyName: stock.companyName,
+            },
+        });
+
+        return {
+            message: 'Stock Listed successfully',
+            stock: this.toStockResponse(stock),
+        };
+    }
+
     private toStockResponse(stock: StockDocument): StockResponse {
         return {
             id: stock._id.toString(),

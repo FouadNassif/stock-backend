@@ -31,6 +31,7 @@ export enum AuditLogAction {
 
     StockCreated = 'stock.created',
     StockUpdated = 'stock.updated',
+    StockListed = 'stock.listed',
     StockDelisted = 'stock.delisted',
 
     PriceAlertCreated = 'price_alert.created',
