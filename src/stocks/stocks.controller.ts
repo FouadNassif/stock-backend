@@ -64,6 +64,13 @@ export class StocksController {
         return this.stocksService.updateStock(id, currentAdmin.sub, dto);
     }
 
+    @Patch(':id/listed')
+    @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+    @AdminRoles(AdminRole.Admin, AdminRole.Analyst)
+    listStock(@Param('id') id: string, @CurrentAdmin() currentAdmin: AdminJwtPayload) {
+        return this.stocksService.listStock(id, currentAdmin.sub);
+    }
+
     @Patch(':id/delist')
     @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
     @AdminRoles(AdminRole.Admin, AdminRole.Analyst)
