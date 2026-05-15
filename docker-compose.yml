@@ -54,6 +54,19 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
 
+  analytics-service:
+    build:
+      context: ./analytics-service
+    container_name: stock-market-analytics-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/stock-market?directConnection=true
+      MONGO_DATABASE: stock-market
+    depends_on:
+      - mongodb
+
 volumes:
   mongodb_data:
   redis_data:
