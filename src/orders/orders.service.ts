@@ -15,6 +15,7 @@ import { TransactionStatus, TransactionType } from 'src/wallet/types/transaction
 import { toOrderResponse } from './mappers/order.mappers';
 import { NotificationEventType } from 'src/messaging/types/notification-event.type';
 import { MessagingService } from 'src/messaging/messaging.service';
+import { RealtimeEventType } from 'src/messaging/types/realtime-event.type';
 
 
 export type OrderResponse = {
@@ -140,25 +141,36 @@ export class OrdersService {
             position: PositionResponse;
         };
 
-        let emailPayload!: {
-            email: string;
-            fullName: string;
-            type: 'buy';
-            ticker: string;
-            companyName: string;
-            quantity: number;
-            priceAtExecution: number;
-            totalAmount: number;
-            walletBalance: number;
-            realizedProfitLoss: number;
-        };
+        let emailPayload:
+            | {
+                email: string;
+                fullName: string;
+                type: 'buy';
+                ticker: string;
+                companyName: string;
+                quantity: number;
+                priceAtExecution: number;
+                totalAmount: number;
+                walletBalance: number;
+                realizedProfitLoss: number;
+            }
+            | undefined;
 
-        let eligibleMember = null;
+        let realtimePayload:
+            | {
+                memberId: string;
+                walletBalance: number;
+                orderId: string;
+                orderType: 'buy';
+                realizedProfitLoss: number;
+            }
+            | undefined;
+
         try {
             await session.withTransaction(async () => {
                 const member = await this.memberModel.findById(currentMemberId).session(session).exec();
 
-                eligibleMember = checkMemberEligibility(member, true);
+                const eligibleMember = checkMemberEligibility(member, true);
 
                 const stock = await this.stockModel.findById(dto.stockId).session(session).exec();
 
@@ -177,17 +189,18 @@ export class OrdersService {
                     throw new BadRequestException('Insufficient wallet balance');
                 }
 
-                let position = await this.positionModel.findOne({
-                    memberId: eligibleMember._id,
-                    stockId: stock._id,
-                    status: PositionStatus.Open,
-                }).session(session).exec();
+                let position = await this.positionModel
+                    .findOne({
+                        memberId: eligibleMember._id,
+                        stockId: stock._id,
+                        status: PositionStatus.Open,
+                    })
+                    .session(session).exec();
 
                 if (position) {
                     const oldTotalCost = position.sharesHeld * position.avgPurchasePrice;
 
                     const newBuyCost = dto.quantity * priceAtExecution;
-
                     const newShares = position.sharesHeld + dto.quantity;
 
                     position.avgPurchasePrice = (oldTotalCost + newBuyCost) / newShares;
@@ -209,6 +222,7 @@ export class OrdersService {
                         ],
                         { session },
                     );
+
                     position = createdPositions[0];
                 }
 
@@ -273,10 +287,26 @@ export class OrdersService {
                     walletBalance: eligibleMember.walletBalance,
                     realizedProfitLoss: 0,
                 };
+
+                realtimePayload = {
+                    memberId: eligibleMember._id.toString(),
+                    walletBalance: eligibleMember.walletBalance,
+                    orderId: order._id.toString(),
+                    orderType: 'buy',
+                    realizedProfitLoss: 0,
+                };
             });
         } finally {
             await session.endSession();
         }
+
+        if (realtimePayload) {
+            await this.messagingService.publishRealtime({
+                type: RealtimeEventType.PortfolioUpdated,
+                payload: realtimePayload,
+            });
+        }
+
         if (emailPayload) {
             await this.messagingService.publishNotification({
                 type: NotificationEventType.TradeConfirmationEmailRequested,
@@ -305,32 +335,38 @@ export class OrdersService {
             position: PositionResponse;
         };
 
-        let emailPayload!: {
-            email: string;
-            fullName: string;
-            type: 'sell';
-            ticker: string;
-            companyName: string;
-            quantity: number;
-            priceAtExecution: number;
-            totalAmount: number;
-            walletBalance: number;
-            realizedProfitLoss: number;
-        };
+        let emailPayload:
+            | {
+                email: string;
+                fullName: string;
+                type: 'sell';
+                ticker: string;
+                companyName: string;
+                quantity: number;
+                priceAtExecution: number;
+                totalAmount: number;
+                walletBalance: number;
+                realizedProfitLoss: number;
+            }
+            | undefined;
+
+        let realtimePayload:
+            | {
+                memberId: string;
+                walletBalance: number;
+                orderId: string;
+                orderType: 'sell';
+                realizedProfitLoss: number;
+            }
+            | undefined;
 
         try {
             await session.withTransaction(async () => {
-                const member = await this.memberModel
-                    .findById(currentMemberId)
-                    .session(session)
-                    .exec();
+                const member = await this.memberModel.findById(currentMemberId).session(session).exec();
 
                 const eligibleMember = checkMemberEligibility(member, true);
 
-                const stock = await this.stockModel
-                    .findById(dto.stockId)
-                    .session(session)
-                    .exec();
+                const stock = await this.stockModel.findById(dto.stockId).session(session).exec();
 
                 if (!stock) {
                     throw new NotFoundException('Stock not found');
@@ -342,8 +378,7 @@ export class OrdersService {
                         stockId: stock._id,
                         status: PositionStatus.Open,
                     })
-                    .session(session)
-                    .exec();
+                    .session(session).exec();
 
                 if (!position) {
                     throw new NotFoundException('No open position found for this stock');
@@ -356,8 +391,7 @@ export class OrdersService {
                 const priceAtExecution = stock.currentPrice;
                 const totalAmount = priceAtExecution * dto.quantity;
 
-                const realizedProfitLoss =
-                    (priceAtExecution - position.avgPurchasePrice) * dto.quantity;
+                const realizedProfitLoss = (priceAtExecution - position.avgPurchasePrice) * dto.quantity;
 
                 const balanceBefore = eligibleMember.walletBalance;
                 const balanceAfter = balanceBefore + totalAmount;
@@ -401,7 +435,7 @@ export class OrdersService {
                             amount: totalAmount,
                             status: TransactionStatus.Completed,
                             referenceId: order._id.toString(),
-                            notes: `Sold ${dto.quantity} shares of ${stock.ticker} at $${priceAtExecution}. Realized P&L: $${realizedProfitLoss.toFixed(2)}.`,
+                            notes: `Sold ${dto.quantity} shares of ${stock.ticker} at $${priceAtExecution}.`,
                             balanceBefore,
                             balanceAfter,
                             processedAt: new Date(),
@@ -429,9 +463,24 @@ export class OrdersService {
                     walletBalance: eligibleMember.walletBalance,
                     realizedProfitLoss,
                 };
+
+                realtimePayload = {
+                    memberId: eligibleMember._id.toString(),
+                    walletBalance: eligibleMember.walletBalance,
+                    orderId: order._id.toString(),
+                    orderType: 'sell',
+                    realizedProfitLoss,
+                };
             });
         } finally {
             await session.endSession();
+        }
+
+        if (realtimePayload) {
+            await this.messagingService.publishRealtime({
+                type: RealtimeEventType.PortfolioUpdated,
+                payload: realtimePayload,
+            });
         }
 
         if (emailPayload) {
@@ -440,6 +489,7 @@ export class OrdersService {
                 payload: emailPayload,
             });
         }
+
         return response;
     }
 

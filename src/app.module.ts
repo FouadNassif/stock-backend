@@ -19,6 +19,7 @@ import { MessagingModule } from './messaging/messaging.module';
 import { AlertsService } from './alerts/alerts.service';
 import { AlertsController } from './alerts/alerts.controller';
 import { AlertsModule } from './alerts/alerts.module';
+import { RealtimeModule } from './realtime/realtime.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { AlertsModule } from './alerts/alerts.module';
     PaymentsModule,
     MessagingModule,
     AlertsModule,
+    RealtimeModule,
   ],
   controllers: [AlertsController],
 })
