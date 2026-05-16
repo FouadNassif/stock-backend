@@ -22,4 +22,16 @@ export class SystemAlertsController {
     runNegativeBalanceCheckManually() {
         return this.systemAlertsService.runNegativeBalanceCheckManually();
     }
+
+    @Get('stale-pending-withdrawals')
+    @AdminRoles(AdminRole.Support)
+    getLatestStalePendingWithdrawalsAlert() {
+        return this.systemAlertsService.getLatestStalePendingWithdrawalsAlert();
+    }
+
+    @Post('stale-pending-withdrawals/run')
+    @AdminRoles(AdminRole.Support)
+    runStalePendingWithdrawalsCheckManually() {
+        return this.systemAlertsService.runStalePendingWithdrawalsCheckManually();
+    }
 }

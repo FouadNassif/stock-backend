@@ -2,7 +2,18 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { Member, MemberSchema } from '../members/schemas/member.schema';
-import { NegativeBalanceAlert, NegativeBalanceAlertSchema } from './schemas/negative-balance-alert.schema';
+import {
+    Transaction,
+    TransactionSchema,
+} from '../wallet/schemas/transaction.schema';
+import {
+    NegativeBalanceAlert,
+    NegativeBalanceAlertSchema,
+} from './schemas/negative-balance-alert.schema';
+import {
+    StalePendingWithdrawalAlert,
+    StalePendingWithdrawalAlertSchema,
+} from './schemas/stale-pending-withdrawal-alert.schema';
 import { SystemAlertsController } from './system-alerts.controller';
 import { SystemAlertsService } from './system-alerts.service';
 
@@ -14,8 +25,16 @@ import { SystemAlertsService } from './system-alerts.service';
                 schema: MemberSchema,
             },
             {
+                name: Transaction.name,
+                schema: TransactionSchema,
+            },
+            {
                 name: NegativeBalanceAlert.name,
                 schema: NegativeBalanceAlertSchema,
+            },
+            {
+                name: StalePendingWithdrawalAlert.name,
+                schema: StalePendingWithdrawalAlertSchema,
             },
         ]),
     ],
