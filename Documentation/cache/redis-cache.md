@@ -92,7 +92,7 @@ Implemented invalidation points:
 | `PATCH /stocks/:id/update` | Clears all stock list caches and the updated stock detail/current-price keys. |
 | `PATCH /stocks/:id/delist` | Clears all stock list caches and the delisted stock detail/current-price keys. |
 
-`PATCH /stocks/:id/listed` updates the stock listing status, but the inspected service does not call `invalidateStockCache` in that method. Cached list/detail data may remain until TTL expiry or a manual `clear=1` refresh. Check implementation before relying on automatic cache invalidation for relisting.
+`PATCH /stocks/:id/listed` clears all stock list caches and the listed stock `detail/current-price keys`. Cached list/detail data may remain until TTL expiry or a manual `clear=1` refresh. Check implementation before relying on automatic cache invalidation for relisting.
 
 ## 7. Portfolio Cache
 
