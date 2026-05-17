@@ -48,3 +48,19 @@ class SectorAllocationItem(BaseModel):
 class SectorAllocationResponse(BaseModel):
     totalAum: float
     sectors: list[SectorAllocationItem]
+    
+class MembersGrowthSummary(BaseModel):
+    totalMembers: int
+    currentMonthMembers: int
+    previousMonthMembers: int
+    monthOverMonthGrowthRate: float
+
+
+class PendingWithdrawalsSummary(BaseModel):
+    totalPendingWithdrawals: int
+    totalPendingAmount: float
+
+
+class AdminAnalyticsSummaryResponse(BaseModel):
+    members: MembersGrowthSummary
+    withdrawals: PendingWithdrawalsSummary

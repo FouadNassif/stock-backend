@@ -5,6 +5,7 @@ from fastapi import APIRouter, Query
 
 from app.models.analytics_models import (
     ActiveMemberItem,
+    AdminAnalyticsSummaryResponse,
     AumResponse,
     PaginatedTopTradedStocksResponse,
     SectorAllocationResponse,
@@ -70,3 +71,9 @@ async def get_sector_allocation():
     service = AnalyticsService()
 
     return await service.get_sector_allocation()
+
+@router.get("/admin/summary", response_model=AdminAnalyticsSummaryResponse)
+async def get_admin_summary():
+    service = AnalyticsService()
+
+    return await service.get_admin_summary()

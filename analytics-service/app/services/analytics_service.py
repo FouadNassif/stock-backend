@@ -7,8 +7,11 @@ from fastapi import HTTPException, status
 from app.database import get_database
 from app.models.analytics_models import (
     ActiveMemberItem,
+    AdminAnalyticsSummaryResponse,
     AumResponse,
+    MembersGrowthSummary,
     PaginatedTopTradedStocksResponse,
+    PendingWithdrawalsSummary,
     SectorAllocationItem,
     SectorAllocationResponse,
     TopTradedStockItem,
@@ -354,4 +357,98 @@ class AnalyticsService:
         return SectorAllocationResponse(
             totalAum=total_aum,
             sectors=sectors,
+        )
+        
+    async def get_admin_summary(self) -> AdminAnalyticsSummaryResponse:
+        now = datetime.now(timezone.utc)
+
+        current_month_start = datetime(
+            year=now.year,
+            month=now.month,
+            day=1,
+            tzinfo=timezone.utc,
+        )
+
+        if now.month == 1:
+            previous_month_start = datetime(
+                year=now.year - 1,
+                month=12,
+                day=1,
+                tzinfo=timezone.utc,
+            )
+        else:
+            previous_month_start = datetime(
+                year=now.year,
+                month=now.month - 1,
+                day=1,
+                tzinfo=timezone.utc,
+            )
+
+        total_members = await self.database.members.count_documents({})
+
+        current_month_members = await self.database.members.count_documents(
+            {
+                "createdAt": {
+                    "$gte": current_month_start,
+                    "$lte": now,
+                }
+            }
+        )
+
+        previous_month_members = await self.database.members.count_documents(
+            {
+                "createdAt": {
+                    "$gte": previous_month_start,
+                    "$lt": current_month_start,
+                }
+            }
+        )
+
+        if previous_month_members == 0:
+            month_over_month_growth_rate = (
+                100.0 if current_month_members > 0 else 0.0
+            )
+        else:
+            month_over_month_growth_rate = (
+                (current_month_members - previous_month_members)
+                / previous_month_members
+            ) * 100
+
+        pending_withdrawals_pipeline = [
+            {
+                "$match": {
+                    "type": "withdrawal",
+                    "status": "pending",
+                }
+            },
+            {
+                "$group": {
+                    "_id": None,
+                    "totalPendingWithdrawals": {"$sum": 1},
+                    "totalPendingAmount": {"$sum": "$amount"},
+                }
+            },
+        ]
+
+        pending_result = await self.database.transactions.aggregate(
+            pending_withdrawals_pipeline,
+        ).to_list(length=1)
+
+        pending_summary = pending_result[0] if pending_result else {}
+
+        return AdminAnalyticsSummaryResponse(
+            members=MembersGrowthSummary(
+                totalMembers=total_members,
+                currentMonthMembers=current_month_members,
+                previousMonthMembers=previous_month_members,
+                monthOverMonthGrowthRate=round(month_over_month_growth_rate, 2),
+            ),
+            withdrawals=PendingWithdrawalsSummary(
+                totalPendingWithdrawals=int(
+                    pending_summary.get("totalPendingWithdrawals", 0),
+                ),
+                totalPendingAmount=float(
+                    pending_summary.get("totalPendingAmount", 0),
+                ),
+            ),
         )

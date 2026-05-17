@@ -39,4 +39,10 @@ export class AnalyticsController {
     getSectorAllocation() {
         return this.analyticsService.getSectorAllocation();
     }
+
+    @Get('admin/summary')
+    @AdminRoles(AdminRole.Admin)
+    getAdminSummary() {
+        return this.analyticsService.getAdminSummary();
+    }
 }
