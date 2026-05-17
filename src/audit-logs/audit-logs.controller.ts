@@ -11,10 +11,10 @@ import { ListAuditLogsQueryDto } from './dto/list-audit-logs-query.dto';
 @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
 @AdminRoles(AdminRole.Admin)
 export class AuditLogsController {
-    constructor(private readonly auditLogsService: AuditLogsService) { }
+  constructor(private readonly auditLogsService: AuditLogsService) {}
 
-    @Get()
-    list(@Query() query: ListAuditLogsQueryDto) {
-        return this.auditLogsService.list(query);
-    }
+  @Get()
+  list(@Query() query: ListAuditLogsQueryDto) {
+    return this.auditLogsService.list(query);
+  }
 }

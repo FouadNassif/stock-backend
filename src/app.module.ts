@@ -54,8 +54,8 @@ import { AnalyticsModule } from './analytics/analytics.module';
     RealtimeModule,
     SystemAlertsModule,
     SchedulerJobsModule,
-    AnalyticsModule
+    AnalyticsModule,
   ],
   controllers: [AlertsController],
 })
-export class AppModule { }
+export class AppModule {}

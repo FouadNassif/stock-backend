@@ -1,17 +1,17 @@
 import { IsDateString, IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class RegisterDto {
-    @IsString()
-    @IsNotEmpty()
-    fullName!: string;
+  @IsString()
+  @IsNotEmpty()
+  fullName!: string;
 
-    @IsEmail()
-    email!: string;
+  @IsEmail()
+  email!: string;
 
-    @IsString()
-    @IsNotEmpty()
-    nationalId!: string;
+  @IsString()
+  @IsNotEmpty()
+  nationalId!: string;
 
-    @IsDateString()
-    dateOfBirth!: string;
+  @IsDateString()
+  dateOfBirth!: string;
 }

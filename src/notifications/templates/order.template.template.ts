@@ -72,9 +72,11 @@ export function buildTradeConfirmationEmailTemplate(params: {
                 <tr>
                   <td style="padding:36px 32px 24px;">
                     <div style="text-align:center; margin-bottom:24px;">
-                      <span style="display:inline-block; padding:8px 16px; border-radius:999px; background-color:${isBuy ? '#dcfce7' : '#dbeafe'
-    }; color:${isBuy ? '#166534' : '#1e40af'
-    }; font-size:13px; font-weight:800; letter-spacing:1px;">
+                      <span style="display:inline-block; padding:8px 16px; border-radius:999px; background-color:${
+                        isBuy ? '#dcfce7' : '#dbeafe'
+                      }; color:${
+                        isBuy ? '#166534' : '#1e40af'
+                      }; font-size:13px; font-weight:800; letter-spacing:1px;">
                         ${badgeText}
                       </span>
                     </div>

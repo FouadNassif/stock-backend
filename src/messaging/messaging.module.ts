@@ -47,4 +47,4 @@ import { MessagingService } from './messaging.service';
   providers: [MessagingService],
   exports: [MessagingService],
 })
-export class MessagingModule { }
+export class MessagingModule {}

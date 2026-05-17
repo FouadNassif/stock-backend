@@ -1,4 +1,3 @@
-
 export function buildOtpEmailTemplate(code: string): string {
   return `
     <!DOCTYPE html>

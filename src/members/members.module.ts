@@ -18,4 +18,4 @@ import { MembersController } from './members.controller';
   exports: [MembersService, MongooseModule],
   controllers: [MembersController],
 })
-export class MembersModule { }
+export class MembersModule {}

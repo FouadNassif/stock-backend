@@ -2,9 +2,21 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
-import { buildOtpEmailTemplate, buildPasswordResetOtpEmailTemplate } from './templates/otp.template';
-import { buildIdentityApprovedEmailTemplate, buildIdentityRejectedEmailTemplate, buildMemberSuspendedEmailTemplate, buildNewAdminEmailTemplate } from './templates/admin.template.template';
-import { buildWalletCreditEmailTemplate, buildWithdrawalApprovedEmailTemplate, buildWithdrawalRejectedEmailTemplate } from './templates/transaction.template';
+import {
+  buildOtpEmailTemplate,
+  buildPasswordResetOtpEmailTemplate,
+} from './templates/otp.template';
+import {
+  buildIdentityApprovedEmailTemplate,
+  buildIdentityRejectedEmailTemplate,
+  buildMemberSuspendedEmailTemplate,
+  buildNewAdminEmailTemplate,
+} from './templates/admin.template.template';
+import {
+  buildWalletCreditEmailTemplate,
+  buildWithdrawalApprovedEmailTemplate,
+  buildWithdrawalRejectedEmailTemplate,
+} from './templates/transaction.template';
 import { buildTradeConfirmationEmailTemplate } from './templates/order.template.template';
 import { buildPriceAlertEmailTemplate } from './templates/notifications.template';
 
@@ -26,7 +38,9 @@ export class NotificationsService {
 
   async sendOtp(email: string, code: string): Promise<void> {
     const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
-    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
+    const mailFromName =
+      this.configService.get<string>('MAIL_FROM_NAME') ??
+      'Stock Market Platform';
 
     await this.transporter.sendMail({
       from: `"${mailFromName}" <${mailFrom}>`,
@@ -37,9 +51,15 @@ export class NotificationsService {
     });
   }
 
-  async sendNewAdminEmail(email: string, tempPassword: string, fullName: string): Promise<void> {
+  async sendNewAdminEmail(
+    email: string,
+    tempPassword: string,
+    fullName: string,
+  ): Promise<void> {
     const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
-    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
+    const mailFromName =
+      this.configService.get<string>('MAIL_FROM_NAME') ??
+      'Stock Market Platform';
 
     await this.transporter.sendMail({
       from: `"${mailFromName}" <${mailFrom}>`,
@@ -50,7 +70,6 @@ export class NotificationsService {
     });
   }
 
-
   async sendWalletCreditEmail(
     email: string,
     fullName: string,
@@ -58,7 +77,9 @@ export class NotificationsService {
     newBalance: number,
   ): Promise<void> {
     const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
-    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
+    const mailFromName =
+      this.configService.get<string>('MAIL_FROM_NAME') ??
+      'Stock Market Platform';
 
     await this.transporter.sendMail({
       from: `"${mailFromName}" <${mailFrom}>`,
@@ -76,14 +97,20 @@ export class NotificationsService {
     newBalance: number,
   ): Promise<void> {
     const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
-    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
+    const mailFromName =
+      this.configService.get<string>('MAIL_FROM_NAME') ??
+      'Stock Market Platform';
 
     await this.transporter.sendMail({
       from: `"${mailFromName}" <${mailFrom}>`,
       to: email,
       subject: 'Withdrawal Approved',
       text: `Dear ${fullName}, your withdrawal request of $${amount} has been approved. Your new wallet balance is $${newBalance}.`,
-      html: buildWithdrawalApprovedEmailTemplate({ fullName, amount, newBalance }),
+      html: buildWithdrawalApprovedEmailTemplate({
+        fullName,
+        amount,
+        newBalance,
+      }),
     });
   }
 
@@ -94,7 +121,9 @@ export class NotificationsService {
     reason: string,
   ): Promise<void> {
     const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
-    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
+    const mailFromName =
+      this.configService.get<string>('MAIL_FROM_NAME') ??
+      'Stock Market Platform';
 
     await this.transporter.sendMail({
       from: `"${mailFromName}" <${mailFrom}>`,
@@ -118,7 +147,9 @@ export class NotificationsService {
     realizedProfitLoss?: number;
   }): Promise<void> {
     const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
-    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
+    const mailFromName =
+      this.configService.get<string>('MAIL_FROM_NAME') ??
+      'Stock Market Platform';
 
     await this.transporter.sendMail({
       from: `"${mailFromName}" <${mailFrom}>`,
@@ -141,7 +172,9 @@ export class NotificationsService {
     code: string,
   ): Promise<void> {
     const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
-    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
+    const mailFromName =
+      this.configService.get<string>('MAIL_FROM_NAME') ??
+      'Stock Market Platform';
 
     await this.transporter.sendMail({
       from: `"${mailFromName}" <${mailFrom}>`,
@@ -155,13 +188,14 @@ export class NotificationsService {
     });
   }
 
-
   async sendIdentityApprovedEmail(
     email: string,
     fullName: string,
   ): Promise<void> {
     const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
-    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
+    const mailFromName =
+      this.configService.get<string>('MAIL_FROM_NAME') ??
+      'Stock Market Platform';
 
     await this.transporter.sendMail({
       from: `"${mailFromName}" <${mailFrom}>`,
@@ -178,7 +212,9 @@ export class NotificationsService {
     reason: string,
   ): Promise<void> {
     const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
-    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
+    const mailFromName =
+      this.configService.get<string>('MAIL_FROM_NAME') ??
+      'Stock Market Platform';
 
     await this.transporter.sendMail({
       from: `"${mailFromName}" <${mailFrom}>`,
@@ -195,7 +231,9 @@ export class NotificationsService {
     reason: string,
   ): Promise<void> {
     const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
-    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
+    const mailFromName =
+      this.configService.get<string>('MAIL_FROM_NAME') ??
+      'Stock Market Platform';
 
     await this.transporter.sendMail({
       from: `"${mailFromName}" <${mailFrom}>`,
@@ -216,7 +254,9 @@ export class NotificationsService {
     direction: 'above' | 'below';
   }): Promise<void> {
     const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
-    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
+    const mailFromName =
+      this.configService.get<string>('MAIL_FROM_NAME') ??
+      'Stock Market Platform';
 
     await this.transporter.sendMail({
       from: `"${mailFromName}" <${mailFrom}>`,
@@ -226,5 +266,4 @@ export class NotificationsService {
       html: buildPriceAlertEmailTemplate(params),
     });
   }
-
 }

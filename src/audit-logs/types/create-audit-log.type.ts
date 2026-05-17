@@ -1,29 +1,29 @@
 import {
-    AuditActorType,
-    AuditLogAction,
-    AuditTargetType,
+  AuditActorType,
+  AuditLogAction,
+  AuditTargetType,
 } from './audit-log-action.type';
 
 export type AuditLogChangeValue = {
-    before?: unknown;
-    after?: unknown;
+  before?: unknown;
+  after?: unknown;
 };
 
 export type CreateAuditLogParams = {
-    actorId?: string;
-    actorType: AuditActorType;
+  actorId?: string;
+  actorType: AuditActorType;
 
-    action: AuditLogAction;
+  action: AuditLogAction;
 
-    targetType: AuditTargetType;
-    targetId?: string;
+  targetType: AuditTargetType;
+  targetId?: string;
 
-    description: string;
-    reason?: string;
+  description: string;
+  reason?: string;
 
-    changes?: Record<string, AuditLogChangeValue>;
-    metadata?: Record<string, unknown>;
+  changes?: Record<string, AuditLogChangeValue>;
+  metadata?: Record<string, unknown>;
 
-    ipAddress?: string;
-    userAgent?: string;
+  ipAddress?: string;
+  userAgent?: string;
 };

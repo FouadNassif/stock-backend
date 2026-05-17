@@ -11,24 +11,38 @@ import { ListOrdersQueryDto } from './dto/list-orders-query.dto';
 @Controller('orders')
 @UseGuards(JwtAuthGuard)
 export class OrdersController {
-    constructor(private readonly orderService: OrdersService) { }
+  constructor(private readonly orderService: OrdersService) {}
 
-    @Post('buy')
-    buyStock(@CurrentMember() currentMember: JwtPayload, @Body() dto: BuyOrderDto) {
-        return this.orderService.buyStock(currentMember.sub, dto);
-    }
+  @Post('buy')
+  buyStock(
+    @CurrentMember() currentMember: JwtPayload,
+    @Body() dto: BuyOrderDto,
+  ) {
+    return this.orderService.buyStock(currentMember.sub, dto);
+  }
 
-    @Post('sell')
-    sellStock(@CurrentMember() currentMember: JwtPayload, @Body() dto: SellOrderDto) {
-        return this.orderService.sellStock(currentMember.sub, dto);
-    }
-    @Get('portfolio')
-    getPortfolio(@CurrentMember() currentMember: JwtPayload, @Query('clear') clear?: string,
-    ) {
-        return this.orderService.getPortfolio(currentMember.sub, clear === '1' || clear === 'true');
-    }
-    @Get('history')
-    getOrderHistory(@CurrentMember() currentMember: JwtPayload, @Query() query: ListOrdersQueryDto) {
-        return this.orderService.getOrderHistory(currentMember.sub, query);
-    }
+  @Post('sell')
+  sellStock(
+    @CurrentMember() currentMember: JwtPayload,
+    @Body() dto: SellOrderDto,
+  ) {
+    return this.orderService.sellStock(currentMember.sub, dto);
+  }
+  @Get('portfolio')
+  getPortfolio(
+    @CurrentMember() currentMember: JwtPayload,
+    @Query('clear') clear?: string,
+  ) {
+    return this.orderService.getPortfolio(
+      currentMember.sub,
+      clear === '1' || clear === 'true',
+    );
+  }
+  @Get('history')
+  getOrderHistory(
+    @CurrentMember() currentMember: JwtPayload,
+    @Query() query: ListOrdersQueryDto,
+  ) {
+    return this.orderService.getOrderHistory(currentMember.sub, query);
+  }
 }

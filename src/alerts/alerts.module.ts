@@ -9,25 +9,25 @@ import { AlertsService } from './alerts.service';
 import { PriceAlert, PriceAlertSchema } from './schemas/price-alert.schema';
 
 @Module({
-    imports: [
-        MongooseModule.forFeature([
-            {
-                name: PriceAlert.name,
-                schema: PriceAlertSchema,
-            },
-            {
-                name: Member.name,
-                schema: MemberSchema,
-            },
-            {
-                name: Stock.name,
-                schema: StockSchema,
-            },
-        ]),
-        MessagingModule,
-    ],
-    controllers: [AlertsController],
-    providers: [AlertsService],
-    exports: [AlertsService],
+  imports: [
+    MongooseModule.forFeature([
+      {
+        name: PriceAlert.name,
+        schema: PriceAlertSchema,
+      },
+      {
+        name: Member.name,
+        schema: MemberSchema,
+      },
+      {
+        name: Stock.name,
+        schema: StockSchema,
+      },
+    ]),
+    MessagingModule,
+  ],
+  controllers: [AlertsController],
+  providers: [AlertsService],
+  exports: [AlertsService],
 })
-export class AlertsModule { }
+export class AlertsModule {}

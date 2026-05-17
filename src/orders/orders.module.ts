@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
-import { Transaction, TransactionSchema } from '../wallet/schemas/transaction.schema';
+import {
+  Transaction,
+  TransactionSchema,
+} from '../wallet/schemas/transaction.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Member, MemberSchema } from '../members/schemas/member.schema';
 import { Stock, StockSchema } from '../stocks/schemas/stock.schema';
@@ -39,4 +42,4 @@ import { NotificationsModule } from '../notifications/notifications.module';
   controllers: [OrdersController],
   exports: [OrdersService, MongooseModule],
 })
-export class OrdersModule { }
+export class OrdersModule {}

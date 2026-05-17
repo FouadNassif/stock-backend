@@ -7,16 +7,16 @@ import { AuditLogsController } from './audit-logs.controller';
 
 @Global()
 @Module({
-    imports: [
-        MongooseModule.forFeature([
-            {
-                name: AuditLog.name,
-                schema: AuditLogSchema,
-            },
-        ]),
-    ],
-    controllers: [AuditLogsController],
-    providers: [AuditLogsService],
-    exports: [AuditLogsService],
+  imports: [
+    MongooseModule.forFeature([
+      {
+        name: AuditLog.name,
+        schema: AuditLogSchema,
+      },
+    ]),
+  ],
+  controllers: [AuditLogsController],
+  providers: [AuditLogsService],
+  exports: [AuditLogsService],
 })
-export class AuditLogsModule { }
+export class AuditLogsModule {}
