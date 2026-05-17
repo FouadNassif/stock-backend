@@ -6,7 +6,6 @@ import { PositionDocument, PositionStatus } from './schemas/position.schema';
 import { MemberDocument } from '../members/schemas/member.schema';
 import { StockDocument } from '../stocks/schemas/stock.schema';
 import { TransactionDocument } from '../wallet/schemas/transaction.schema';
-import { NotificationsService } from '../notifications/notifications.service';
 import { checkMemberEligibility } from '../common/utils/member.util';
 import { BuyOrderDto } from './dto/buy-order.dto';
 import { SellOrderDto } from './dto/sell-order.dto';
@@ -16,6 +15,9 @@ import { toOrderResponse } from './mappers/order.mappers';
 import { NotificationEventType } from 'src/messaging/types/notification-event.type';
 import { MessagingService } from 'src/messaging/messaging.service';
 import { RealtimeEventType } from 'src/messaging/types/realtime-event.type';
+import { RedisService } from 'src/common/redis/redis.service';
+import { ConfigService } from '@nestjs/config';
+import { CacheKeys } from 'src/common/redis/constants/cache-keys.constant';
 
 
 export type OrderResponse = {
@@ -104,6 +106,12 @@ type OrderHistoryFilter = {
     };
 };
 
+type CacheMetadata = {
+    cache: {
+        source: 'cache' | 'database';
+    };
+};
+
 @Injectable()
 export class OrdersService {
     constructor(
@@ -119,8 +127,10 @@ export class OrdersService {
         private readonly stockModel: Model<StockDocument>,
         @InjectModel('Transaction')
         private readonly transactionModel: Model<TransactionDocument>,
-        private readonly notificationsService: NotificationsService,
         private readonly messagingService: MessagingService,
+
+        private readonly redisService: RedisService,
+        private readonly configService: ConfigService,
     ) { }
 
     async buyStock(
@@ -300,6 +310,8 @@ export class OrdersService {
             await session.endSession();
         }
 
+        await this.redisService.delete(CacheKeys.portfolio(currentMemberId));
+
         if (realtimePayload) {
             await this.messagingService.publishRealtime({
                 type: RealtimeEventType.PortfolioUpdated,
@@ -476,6 +488,8 @@ export class OrdersService {
             await session.endSession();
         }
 
+        await this.redisService.delete(CacheKeys.portfolio(currentMemberId));
+
         if (realtimePayload) {
             await this.messagingService.publishRealtime({
                 type: RealtimeEventType.PortfolioUpdated,
@@ -493,74 +507,83 @@ export class OrdersService {
         return response;
     }
 
-    async getPortfolio(currentMemberId: string): Promise<PortfolioResponse> {
-        const member = await this.memberModel.findById(currentMemberId).exec();
+    async getPortfolio(
+        currentMemberId: string,
+        clear = false,
+    ): Promise<PortfolioResponse & CacheMetadata> {
+        const ttl = this.configService.getOrThrow<number>('CACHE_PORTFOLIO_TTL_SECONDS');
 
-        const eligibleMember = checkMemberEligibility(member);
+        const cacheKey = CacheKeys.portfolio(currentMemberId);
 
-        const positions = await this.positionModel
-            .find({
-                memberId: eligibleMember._id,
-                status: PositionStatus.Open,
-                sharesHeld: { $gt: 0 },
-            })
-            .populate('stockId')
-            .sort({ createdAt: -1 })
-            .exec();
+        if (clear) {
+            await this.redisService.delete(cacheKey);
+        }
 
-        const portfolioPositions: PortfolioPositionResponse[] = positions.map(
-            (position) => {
-                const stock = position.stockId as unknown as StockDocument;
+        const result = await this.redisService.rememberWithSource(
+            cacheKey,
+            ttl,
+            async () => {
+                const member = await this.memberModel.findById(currentMemberId).exec();
 
-                const investedValue =
-                    position.sharesHeld * position.avgPurchasePrice;
+                const eligibleMember = checkMemberEligibility(member, true);
 
-                const currentValue =
-                    position.sharesHeld * stock.currentPrice;
+                const positions = await this.positionModel
+                    .find({
+                        memberId: eligibleMember._id,
+                        status: PositionStatus.Open,
+                    }).populate('stockId').sort({ createdAt: -1 }).exec();
 
-                const unrealizedProfitLoss =
-                    (stock.currentPrice - position.avgPurchasePrice) *
-                    position.sharesHeld;
+                const portfolioPositions = positions.map((position) => {
+                    const stock = position.stockId as unknown as StockDocument;
+
+                    const investedValue = position.sharesHeld * position.avgPurchasePrice;
+
+                    const currentValue = position.sharesHeld * stock.currentPrice;
+
+                    const unrealizedProfitLoss = currentValue - investedValue;
+
+                    return {
+                        positionId: position._id.toString(),
+                        stock: {
+                            id: stock._id.toString(),
+                            ticker: stock.ticker,
+                            companyName: stock.companyName,
+                            sector: stock.sector,
+                            currentPrice: stock.currentPrice,
+                            isListed: stock.isListed,
+                        },
+                        sharesHeld: position.sharesHeld,
+                        avgPurchasePrice: position.avgPurchasePrice,
+                        investedValue,
+                        currentValue,
+                        unrealizedProfitLoss,
+                        openedAt: position.openedAt,
+                    };
+                });
+
+                const totalInvestedValue = portfolioPositions.reduce((sum, position) => sum + position.investedValue, 0);
+
+                const totalCurrentValue = portfolioPositions.reduce((sum, position) => sum + position.currentValue, 0);
+
+                const totalUnrealizedProfitLoss = totalCurrentValue - totalInvestedValue;
 
                 return {
-                    positionId: position._id.toString(),
-                    stock: {
-                        id: stock._id.toString(),
-                        ticker: stock.ticker,
-                        companyName: stock.companyName,
-                        sector: stock.sector,
-                        currentPrice: stock.currentPrice,
-                        isListed: stock.isListed,
+                    positions: portfolioPositions,
+                    summary: {
+                        totalPositions: portfolioPositions.length,
+                        totalInvestedValue,
+                        totalCurrentValue,
+                        totalUnrealizedProfitLoss,
                     },
-                    sharesHeld: position.sharesHeld,
-                    avgPurchasePrice: position.avgPurchasePrice,
-                    investedValue,
-                    currentValue,
-                    unrealizedProfitLoss,
-                    openedAt: position.openedAt,
                 };
             },
         );
 
-        const summary = portfolioPositions.reduce(
-            (acc, position) => {
-                acc.totalInvestedValue += position.investedValue;
-                acc.totalCurrentValue += position.currentValue;
-                acc.totalUnrealizedProfitLoss += position.unrealizedProfitLoss;
-
-                return acc;
-            },
-            {
-                totalPositions: portfolioPositions.length,
-                totalInvestedValue: 0,
-                totalCurrentValue: 0,
-                totalUnrealizedProfitLoss: 0,
-            },
-        );
-
         return {
-            positions: portfolioPositions,
-            summary,
+            ...result.value,
+            cache: {
+                source: result.source,
+            },
         };
     }
 

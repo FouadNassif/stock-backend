@@ -1,11 +1,4 @@
-import {
-    Body,
-    Controller,
-    Get,
-    Post,
-    Query,
-    UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 
 import { CurrentMember } from '../auth/decorators/current-member.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -30,8 +23,9 @@ export class OrdersController {
         return this.orderService.sellStock(currentMember.sub, dto);
     }
     @Get('portfolio')
-    getPortfolio(@CurrentMember() currentMember: JwtPayload) {
-        return this.orderService.getPortfolio(currentMember.sub);
+    getPortfolio(@CurrentMember() currentMember: JwtPayload, @Query('clear') clear?: string,
+    ) {
+        return this.orderService.getPortfolio(currentMember.sub, clear === '1' || clear === 'true');
     }
     @Get('history')
     getOrderHistory(@CurrentMember() currentMember: JwtPayload, @Query() query: ListOrdersQueryDto) {
