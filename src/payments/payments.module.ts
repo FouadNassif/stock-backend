@@ -3,7 +3,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 import { Member, MemberSchema } from '../members/schemas/member.schema';
 import { NotificationsModule } from '../notifications/notifications.module';
-import { Transaction, TransactionSchema } from '../wallet/schemas/transaction.schema';
+import {
+  Transaction,
+  TransactionSchema,
+} from '../wallet/schemas/transaction.schema';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 
@@ -25,4 +28,4 @@ import { PaymentsService } from './payments.service';
   providers: [PaymentsService],
   exports: [PaymentsService],
 })
-export class PaymentsModule { }
+export class PaymentsModule {}

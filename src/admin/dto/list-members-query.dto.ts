@@ -1,65 +1,73 @@
 import { Transform } from 'class-transformer';
 import {
-    IsBoolean,
-    IsEnum,
-    IsInt,
-    IsOptional,
-    IsString,
-    Max,
-    Min,
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
 } from 'class-validator';
 
 import { IdentityStatus } from '../../members/schemas/member.schema';
 
 export class ListMembersQueryDto {
-    @IsOptional()
-    @IsEnum(IdentityStatus)
-    identityStatus?: IdentityStatus;
+  @IsOptional()
+  @IsEnum(IdentityStatus)
+  identityStatus?: IdentityStatus;
 
-    @IsOptional()
-    @Transform(({ value }) => {
-        if (value === 'true') {
-            return true;
-        }
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => {
+    if (value === undefined || value === null || value === '') {
+      return undefined;
+    }
 
-        if (value === 'false') {
-            return false;
-        }
+    if (value === true || value === 'true') {
+      return true;
+    }
 
-        return value;
-    })
-    @IsBoolean()
-    isActive?: boolean;
+    if (value === false || value === 'false') {
+      return false;
+    }
 
-    @IsOptional()
-    @Transform(({ value }) => {
-        if (value === 'true') {
-            return true;
-        }
+    return undefined;
+  })
+  @IsBoolean()
+  isActive?: boolean;
 
-        if (value === 'false') {
-            return false;
-        }
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => {
+    if (value === undefined || value === null || value === '') {
+      return undefined;
+    }
 
-        return value;
-    })
-    @IsBoolean()
-    emailVerified?: boolean;
+    if (value === true || value === 'true') {
+      return true;
+    }
 
-    @IsOptional()
-    @IsString()
-    search?: string;
+    if (value === false || value === 'false') {
+      return false;
+    }
 
-    @IsOptional()
-    @Transform(({ value }) => Number(value))
-    @IsInt()
-    @Min(1)
-    page: number = 1;
+    return undefined;
+  })
+  @IsBoolean()
+  emailVerified?: boolean;
 
-    @IsOptional()
-    @Transform(({ value }) => Number(value))
-    @IsInt()
-    @Min(1)
-    @Max(100)
-    limit: number = 10;
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => Number(value))
+  @IsInt()
+  @Min(1)
+  page: number = 1;
+
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => Number(value))
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit: number = 10;
 }

@@ -53,4 +53,4 @@ import { Admin, AdminSchema } from '../admin/schemas/admin.schema';
   providers: [AuthService, JwtStrategy],
   exports: [AuthService],
 })
-export class AuthModule { }
+export class AuthModule {}

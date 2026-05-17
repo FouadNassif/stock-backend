@@ -7,12 +7,10 @@ import { PortfolioGateway } from '../gateways/portfolio.gateway';
 
 @Controller()
 export class RealtimeEventsConsumer {
-    constructor(private readonly portfolioGateway: PortfolioGateway) { }
+  constructor(private readonly portfolioGateway: PortfolioGateway) {}
 
-    @EventPattern(RealtimeEventType.PortfolioUpdated)
-    handlePortfolioUpdated(
-        @Payload() payload: PortfolioUpdatedPayload,
-    ): void {
-        this.portfolioGateway.emitPortfolioUpdated(payload);
-    }
+  @EventPattern(RealtimeEventType.PortfolioUpdated)
+  handlePortfolioUpdated(@Payload() payload: PortfolioUpdatedPayload): void {
+    this.portfolioGateway.emitPortfolioUpdated(payload);
+  }
 }

@@ -1,48 +1,61 @@
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsInt, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class ListStocksQueryDto {
-    @IsOptional()
-    @IsString()
-    sector?: string;
+  @IsOptional()
+  @IsString()
+  sector?: string;
 
-    @IsOptional()
-    @Transform(({ value }) => {
-        if (value === 'true') {
-            return true;
-        }
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => {
+    if (value === undefined || value === null || value === '') {
+      return undefined;
+    }
 
-        if (value === 'false') {
-            return false;
-        }
-        return value;
-    })
-    @IsBoolean()
-    isListed?: boolean;
+    if (value === 'true' || value === true) {
+      return true;
+    }
 
-    @IsOptional()
-    @IsNumber()
-    currentPrice?: number;
+    if (value === 'false' || value === false) {
+      return false;
+    }
 
-    @IsOptional()
-    @IsString()
-    search?: string;
+    return value;
+  })
+  @IsBoolean()
+  isListed?: boolean;
 
-    @IsOptional()
-    @Transform(({ value }) => Number(value))
-    @IsInt()
-    @Min(1)
-    page: number = 1;
+  @IsOptional()
+  @IsNumber()
+  currentPrice?: number;
 
-    @IsOptional()
-    @Transform(({ value }) => Number(value))
-    @IsInt()
-    @Min(1)
-    @Max(100)
-    limit: number = 10;
+  @IsOptional()
+  @IsString()
+  search?: string;
 
-    @IsOptional()
-    @Transform(({ value }) => value === '1' || value === 'true' || value === true)
-    @IsBoolean()
-    clear?: boolean;
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @Min(1)
+  page: number = 1;
+
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit: number = 10;
+
+  @IsOptional()
+  @Transform(({ value }) => value === '1' || value === 'true' || value === true)
+  @IsBoolean()
+  clear?: boolean;
 }

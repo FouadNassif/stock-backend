@@ -26,7 +26,7 @@ export class PortfolioGateway implements OnGatewayConnection {
   @WebSocketServer()
   private readonly server!: Server;
 
-  constructor(private readonly jwtService: JwtService) { }
+  constructor(private readonly jwtService: JwtService) {}
 
   async handleConnection(client: AuthenticatedSocket): Promise<void> {
     try {
@@ -45,14 +45,14 @@ export class PortfolioGateway implements OnGatewayConnection {
   }
 
   @SubscribeMessage('portfolio.join')
-  handleJoinPortfolioRoom(
-    @ConnectedSocket() client: AuthenticatedSocket,
-  ): { message: string } {
+  handleJoinPortfolioRoom(@ConnectedSocket() client: AuthenticatedSocket): {
+    message: string;
+  } {
     if (!client.member) {
       throw new UnauthorizedException('Unauthorized socket connection');
     }
 
-    client.join(this.getMemberRoom(client.member.sub));
+    void client.join(this.getMemberRoom(client.member.sub));
 
     client.emit('portfolio.joined', {
       memberId: client.member.sub,
@@ -64,11 +64,14 @@ export class PortfolioGateway implements OnGatewayConnection {
   }
 
   emitPortfolioUpdated(payload: PortfolioUpdatedPayload): void {
-    this.server.to(this.getMemberRoom(payload.memberId)).emit('portfolio.updated', payload);
+    this.server
+      .to(this.getMemberRoom(payload.memberId))
+      .emit('portfolio.updated', payload);
   }
 
   private extractToken(client: Socket): string {
-    const authToken = client.handshake.auth?.token;
+    const auth = client.handshake.auth as Record<string, unknown> | undefined;
+    const authToken = auth?.token;
 
     if (typeof authToken === 'string' && authToken.length > 0) {
       return authToken;

@@ -12,7 +12,10 @@ import { AdminJwtStrategy } from './strategies/admin-jwt.strategy';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { WalletModule } from '../wallet/wallet.module';
 import { Member, MemberSchema } from '../members/schemas/member.schema';
-import { Transaction, TransactionSchema } from 'src/wallet/schemas/transaction.schema';
+import {
+  Transaction,
+  TransactionSchema,
+} from 'src/wallet/schemas/transaction.schema';
 import { OrdersModule } from 'src/orders/orders.module';
 
 @Module({
@@ -34,7 +37,7 @@ import { OrdersModule } from 'src/orders/orders.module';
       {
         name: Member.name,
         schema: MemberSchema,
-      }
+      },
     ]),
 
     JwtModule.registerAsync({
@@ -58,4 +61,4 @@ import { OrdersModule } from 'src/orders/orders.module';
   providers: [AdminService, AdminJwtStrategy],
   exports: [AdminService, MongooseModule],
 })
-export class AdminModule { }
+export class AdminModule {}

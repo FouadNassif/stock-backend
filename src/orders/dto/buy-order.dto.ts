@@ -1,10 +1,10 @@
 import { IsMongoId, IsNumber, Min } from 'class-validator';
 
 export class BuyOrderDto {
-    @IsMongoId()
-    stockId!: string;
+  @IsMongoId()
+  stockId!: string;
 
-    @IsNumber()
-    @Min(1)
-    quantity!: number;
+  @IsNumber()
+  @Min(1)
+  quantity!: number;
 }

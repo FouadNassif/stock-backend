@@ -8,4 +8,4 @@ import { NotificationEventsConsumer } from './notification-events.consumer';
   providers: [NotificationsService],
   exports: [NotificationsService],
 })
-export class NotificationsModule { }
+export class NotificationsModule {}

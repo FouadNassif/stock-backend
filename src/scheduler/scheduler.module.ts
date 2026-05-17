@@ -5,10 +5,7 @@ import { NegativeBalanceJob } from './jobs/negative-balance.job';
 import { StalePendingWithdrawalsJob } from './jobs/stale-pending-withdrawals.job';
 
 @Module({
-    imports: [SystemAlertsModule],
-    providers: [
-        NegativeBalanceJob,
-        StalePendingWithdrawalsJob,
-    ],
+  imports: [SystemAlertsModule],
+  providers: [NegativeBalanceJob, StalePendingWithdrawalsJob],
 })
-export class SchedulerJobsModule { }
+export class SchedulerJobsModule {}

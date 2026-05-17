@@ -21,4 +21,4 @@ import { Member, MemberSchema } from '../members/schemas/member.schema';
   providers: [ReferralsService],
   exports: [ReferralsService],
 })
-export class ReferralsModule { }
+export class ReferralsModule {}
