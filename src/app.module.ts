@@ -21,6 +21,7 @@ import { RealtimeModule } from './realtime/realtime.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SystemAlertsModule } from './system-alerts/system-alerts.module';
 import { SchedulerJobsModule } from './scheduler/scheduler.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { SchedulerJobsModule } from './scheduler/scheduler.module';
     RealtimeModule,
     SystemAlertsModule,
     SchedulerJobsModule,
+    AnalyticsModule,
   ],
   controllers: [AlertsController],
 })
