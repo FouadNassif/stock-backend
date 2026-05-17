@@ -1,0 +1,116 @@
+{
+  "admins": [
+    {
+      "fullName": "Omar Admin",
+      "email": "omar.admin@example.com",
+      "role": "admin",
+      "password": "Admin@123456",
+      "notes": "Seeded from environment variables in local development"
+    },
+    {
+      "fullName": "Leila Analyst",
+      "email": "leila.analyst@example.com",
+      "role": "analyst"
+    },
+    {
+      "fullName": "Support Agent",
+      "email": "support@example.com",
+      "role": "support"
+    }
+  ],
+  "members": [
+    {
+      "fullName": "John Referrer",
+      "email": "john@example.com",
+      "nationalId": "NAT-REF-001",
+      "dateOfBirth": "1995-01-01",
+      "emailVerified": true,
+      "referralCode": "JOHN123456"
+    },
+    {
+      "fullName": "Adam Investor",
+      "email": "adam@example.com",
+      "nationalId": "NAT-INV-001",
+      "dateOfBirth": "1998-05-12",
+      "emailVerified": true,
+      "referredBy": "JOHN123456"
+    }
+  ],
+  "stocks": [
+    {
+      "ticker": "AAPL",
+      "companyName": "Apple Inc.",
+      "sector": "Technology",
+      "currentPrice": 182.5,
+      "isListed": true
+    },
+    {
+      "ticker": "MSFT",
+      "companyName": "Microsoft Corporation",
+      "sector": "Technology",
+      "currentPrice": 410.5,
+      "isListed": true
+    },
+    {
+      "ticker": "JPM",
+      "companyName": "JPMorgan Chase & Co.",
+      "sector": "Finance",
+      "currentPrice": 198.2,
+      "isListed": true
+    },
+    {
+      "ticker": "PFE",
+      "companyName": "Pfizer Inc.",
+      "sector": "Healthcare",
+      "currentPrice": 28.75,
+      "isListed": true
+    },
+    {
+      "ticker": "XOM",
+      "companyName": "Exxon Mobil Corporation",
+      "sector": "Energy",
+      "currentPrice": 116.1,
+      "isListed": true
+    }
+  ],
+  "transactions": [
+    {
+      "memberEmail": "adam@example.com",
+      "type": "deposit",
+      "amount": 1000,
+      "status": "completed"
+    },
+    {
+      "memberEmail": "adam@example.com",
+      "type": "withdrawal",
+      "amount": 100,
+      "status": "pending"
+    },
+    {
+      "memberEmail": "adam@example.com",
+      "type": "buy",
+      "amount": 365,
+      "status": "completed"
+    }
+  ],
+  "orders": [
+    {
+      "memberEmail": "adam@example.com",
+      "ticker": "AAPL",
+      "type": "buy",
+      "quantity": 2,
+      "priceAtExecution": 182.5,
+      "totalAmount": 365,
+      "status": "completed"
+    }
+  ],
+  "positions": [
+    {
+      "memberEmail": "adam@example.com",
+      "ticker": "AAPL",
+      "sharesHeld": 2,
+      "avgPurchasePrice": 182.5,
+      "status": "open"
+    }
+  ]
+}

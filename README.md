@@ -1,98 +1,344 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Stock Market Platform
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Overview
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Stock Market Platform is a NestJS backend application for a simulated stock trading platform. It supports member onboarding, OTP email verification, referrals, admin/backoffice users, stock catalogue management, wallet deposits, withdrawal requests, withdrawal CMS review, order execution, portfolio management, transaction history, password recovery, and Redis-based auth rate limiting.
 
-## Description
+## Tech Stack
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- NestJS
+- TypeScript
+- MongoDB
+- Mongoose
+- MongoDB sessions/transactions
+- JWT / Passport
+- bcrypt
+- Nodemailer
+- Docker Compose
+- Mongo Express
+- Redis
+- RedisInsight
+- class-validator / class-transformer
+- Joi environment validation
 
-## Project setup
+## Completed Features
 
-```bash
-$ npm install
+- Member authentication
+- OTP email verification
+- Referral registration
+- Member profile endpoint
+- Member change password
+- Forgot password with OTP reset flow
+- Cross-role email uniqueness between members and admins
+- Admin authentication
+- Admin user provisioning
+- Role-based admin access
+- Stock catalogue
+- Stock price history
+- Wallet deposits
+- Wallet withdrawal requests
+- Admin withdrawal approval/rejection
+- Wallet balance
+- Transaction history
+- Orders: buy/sell stocks
+- Portfolio management
+- Average purchase price calculation
+- Realized and unrealized profit/loss
+- MongoDB transactions using replica set
+- Redis-based auth rate limiting
+- Login rate limiting using IP + email combo keys
+- Forgot password rate limiting using IP + email combo keys
+
+## API Base URL
+
+```txt
+http://localhost:3000/api
 ```
 
-## Compile and run the project
+## Local Setup
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
+docker compose up -d
+npm run start:dev
 ```
 
-## Run tests
+Mongo Express:
+
+```txt
+http://localhost:8081
+```
+
+RedisInsight:
+
+```txt
+http://localhost:5540
+```
+
+## Environment
+
+Create a `.env` file in the project root using:
+
+```txt
+Documentation/.env.example
+```
+
+Important MongoDB URI:
+
+```env
+MONGO_URI=mongodb://localhost:27017/stock_market_platform?replicaSet=rs0
+```
+
+Redis environment variables:
+
+```env
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+```
+
+The application uses MongoDB sessions/transactions for order execution. Because of this, MongoDB must run as a replica set, even in local development.
+
+## MongoDB Replica Set Setup
+
+The Docker MongoDB service should run with replica set enabled.
+
+After starting Docker:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+docker compose up -d
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Initialize the replica set once:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+docker exec -it stock-market-mongodb mongosh
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Inside `mongosh`:
 
-## Resources
+```js
+rs.initiate({
+  _id: "rs0",
+  members: [
+    {
+      _id: 0,
+      host: "localhost:27017"
+    }
+  ]
+})
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+Check status:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```js
+rs.status()
+```
 
-## Support
+Then restart the NestJS server:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
+npm run start:dev
+```
 
-## Stay in touch
+## Docker Commands
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+docker compose up -d
+docker compose down
+docker compose down -v
+```
 
-## License
+Use `docker compose down -v` only when you want to delete local MongoDB and Redis volume data.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Redis
+
+Redis is used for temporary security and performance data.
+
+Current usage:
+
+- Login rate limiting
+- Forgot password rate limiting
+
+Redis keys are temporary and expire automatically using TTL.
+
+Example keys:
+
+```txt
+rate-limit:login:combo:<ip>:<email>
+rate-limit:login:ip:<ip>
+rate-limit:forgot-password:combo:<ip>:<email>
+rate-limit:forgot-password:ip:<ip>
+```
+
+RedisInsight is available at:
+
+```txt
+http://localhost:5540
+```
+
+### Redis Rate Limiting Rules
+
+Login:
+
+```txt
+5 attempts per IP + email combo per 15 minutes
+20 attempts per IP per 15 minutes
+```
+
+Forgot password:
+
+```txt
+3 requests per IP + email combo per 15 minutes
+10 requests per IP per 15 minutes
+```
+
+Why both IP and email are used:
+
+```txt
+IP + email combo protects a specific account from brute force attempts.
+IP-only limit protects the system from one network spamming many emails.
+```
+
+Successful login clears only the login combo key for that IP + email. The IP key remains active to protect against mass abuse from one network.
+
+## Main API Areas
+
+### Member Auth
+
+```txt
+POST /api/auth/register
+POST /api/auth/verify-otp
+POST /api/auth/resend-otp
+POST /api/auth/set-password
+POST /api/auth/login
+POST /api/auth/forgot-password
+POST /api/auth/verify-reset-otp
+POST /api/auth/reset-password
+```
+
+### Members
+
+```txt
+GET  /api/members/me
+POST /api/members/change-password
+```
+
+### Admin
+
+```txt
+POST /api/admin/auth/login
+POST /api/admin/auth/change-password
+POST /api/admin/users
+GET  /api/admin/users
+GET  /api/admin/withdrawals
+POST /api/admin/withdrawals/:id/approve
+POST /api/admin/withdrawals/:id/reject
+```
+
+### Stocks
+
+```txt
+POST  /api/stocks
+GET   /api/stocks
+GET   /api/stocks/:id
+GET   /api/stocks/:id/history
+PATCH /api/stocks/:id
+PATCH /api/stocks/:id/delist
+```
+
+### Wallet
+
+```txt
+POST /api/wallet/deposit
+POST /api/wallet/withdraw
+GET  /api/wallet/balance
+GET  /api/wallet/transactions
+```
+
+### Orders
+
+```txt
+POST /api/orders/buy
+POST /api/orders/sell
+GET  /api/orders/portfolio
+GET  /api/orders/history
+```
+
+## Security Notes
+
+- Passwords are hashed using bcrypt.
+- OTP codes are hashed before being stored.
+- OTP records support expiration, max attempts, and single-use behavior.
+- Password reset uses OTP verification and a short-lived reset token.
+- Forgot password responses are generic to prevent email enumeration.
+- Login and forgot-password routes are rate-limited using Redis.
+- Rate limiting uses IP + email combo keys and IP-only keys.
+- Member IDs are taken from JWT tokens, not from request bodies.
+- Admin IDs are taken from JWT tokens, not from request bodies.
+- Admin routes are protected with admin JWT and role guards.
+- Member emails cannot duplicate admin emails.
+- Buy/sell order flows use MongoDB transactions for database consistency.
+- Sensitive values such as password hashes and OTP hashes are never returned in API responses.
+
+## Documentation
+
+Project documentation is stored in:
+
+```txt
+Documentation/
+```
+
+The documentation includes:
+
+```txt
+Documentation/.env.example
+Documentation/README_AUTH.md
+Documentation/README_ADMIN.md
+Documentation/README_MEMBERS.md
+Documentation/README_STOCKS.md
+Documentation/README_WALLET.md
+Documentation/README_ORDERS.md
+Documentation/README_SECURITY.md
+Documentation/schemas/
+Documentation/postman/
+Documentation/seed-data/
+```
+
+## Branching Strategy
+
+Feature branches are created from `development`.
+
+Examples:
+
+```txt
+feat/auth
+feat/admin-auth
+feat/stocks
+feat/wallet
+feat/orders
+feat/alerts
+fix/project-cleanup
+```
+
+## Commit Convention
+
+Commits follow:
+
+```txt
+type(scope): description
+```
+
+Examples:
+
+```txt
+feat(auth): add otp verification
+feat(admin): add admin user provisioning
+feat(stocks): add stock catalogue and price history
+feat(wallet): add deposits withdrawals and transaction history
+feat(orders): add buy sell and portfolio management
+feat(redis): add ip email auth rate limiting
+fix(auth): prevent duplicate emails across members and admins
+docs(project): update documentation for members auth and orders
+docs(security): document redis auth rate limiting
+```
