@@ -40,4 +40,9 @@ export class ListStocksQueryDto {
     @Min(1)
     @Max(100)
     limit: number = 10;
+
+    @IsOptional()
+    @Transform(({ value }) => value === '1' || value === 'true' || value === true)
+    @IsBoolean()
+    clear?: boolean;
 }

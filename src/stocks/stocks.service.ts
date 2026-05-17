@@ -10,6 +10,9 @@ import { Stock, StockDocument } from './schemas/stock.schema';
 import { AuditLogsService } from 'src/audit-logs/audit-logs.service';
 import { AuditActorType, AuditLogAction, AuditTargetType } from 'src/audit-logs/types/audit-log-action.type';
 import { AlertsService } from 'src/alerts/alerts.service';
+import { RedisService } from 'src/common/redis/redis.service';
+import { ConfigService } from '@nestjs/config';
+import { CacheKeys } from 'src/common/redis/constants/cache-keys.constant';
 
 type StockFilter = {
     sector?: string;
@@ -32,6 +35,11 @@ export type StockResponse = {
     createdAt?: Date;
     updatedAt?: Date;
 };
+type CacheMetadata = {
+    cache: {
+        source: 'cache' | 'database';
+    };
+};
 
 @Injectable()
 export class StocksService {
@@ -45,6 +53,9 @@ export class StocksService {
         private readonly auditLogsService: AuditLogsService,
 
         private readonly alertsService: AlertsService,
+
+        private readonly redisService: RedisService,
+        private readonly configService: ConfigService,
     ) { }
 
     async createStock(
@@ -91,13 +102,17 @@ export class StocksService {
             },
         });
 
+        await this.invalidateStockCache(stock.ticker);
+
         return {
             message: 'Stock created successfully',
             stock: this.toStockResponse(stock),
         };
     }
 
-    async listStocks(query: ListStocksQueryDto): Promise<{
+    async listStocks(
+        query: ListStocksQueryDto,
+    ): Promise<{
         data: StockResponse[];
         pagination: {
             page: number;
@@ -105,61 +120,105 @@ export class StocksService {
             total: number;
             totalPages: number;
         };
-    }> {
-        const page = query.page ?? 1;
-        const limit = query.limit ?? 10;
-        const skip = (page - 1) * limit;
+    } & CacheMetadata> {
+        const ttl = this.configService.getOrThrow<number>('CACHE_STOCKS_TTL_SECONDS');
 
-        const filter: StockFilter = {};
+        const { clear, ...queryWithoutClear } = query;
 
-        if (query.sector) {
-            filter.sector = query.sector;
+        const queryKey = JSON.stringify(queryWithoutClear);
+        const cacheKey = CacheKeys.stocksList(queryKey);
+
+        if (clear) {
+            await this.redisService.delete(cacheKey);
         }
 
-        if (typeof query.isListed === 'boolean') {
-            filter.isListed = query.isListed;
-        }
+        const result = await this.redisService.rememberWithSource(
+            cacheKey,
+            ttl,
+            async () => {
+                const page = query.page ?? 1;
+                const limit = query.limit ?? 10;
+                const skip = (page - 1) * limit;
 
-        if (query.search) {
-            const searchRegex = new RegExp(query.search, 'i');
+                const filter: StockFilter = {};
 
-            filter.$or = [
-                { companyName: searchRegex },
-                { ticker: searchRegex },
-                { sector: searchRegex },
-            ];
-        }
+                if (query.sector) {
+                    filter.sector = query.sector;
+                }
 
-        const [stocks, total] = await Promise.all([
-            this.stockModel
-                .find(filter)
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(limit)
-                .exec(),
+                if (typeof query.isListed === 'boolean') {
+                    filter.isListed = query.isListed;
+                }
 
-            this.stockModel.countDocuments(filter).exec(),
-        ]);
+                if (query.search) {
+                    const searchRegex = new RegExp(query.search, 'i');
+
+                    filter.$or = [
+                        { companyName: searchRegex },
+                        { ticker: searchRegex },
+                        { sector: searchRegex },
+                    ];
+                }
+
+                const [stocks, total] = await Promise.all([
+                    this.stockModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+                    this.stockModel.countDocuments(filter).exec(),
+                ]);
+
+                return {
+                    data: stocks.map((stock) => this.toStockResponse(stock)),
+                    pagination: {
+                        page,
+                        limit,
+                        total,
+                        totalPages: Math.ceil(total / limit),
+                    },
+                };
+            },
+        );
 
         return {
-            data: stocks.map((stock) => this.toStockResponse(stock)),
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit),
+            ...result.value,
+            cache: {
+                source: result.source,
             },
         };
     }
 
-    async getStockById(ticker: string): Promise<StockResponse> {
-        const stock = await this.stockModel.findOne({ ticker }).exec();
+    async getStockById(
+        ticker: string,
+        clear = false,
+    ): Promise<StockResponse & CacheMetadata> {
+        const normalizedTicker = ticker.toUpperCase();
 
-        if (!stock) {
-            throw new NotFoundException('Stock not found');
+        const ttl = this.configService.getOrThrow<number>('CACHE_STOCKS_TTL_SECONDS');
+
+        const cacheKey = CacheKeys.stockDetail(normalizedTicker);
+
+        if (clear) {
+            await this.redisService.delete(cacheKey);
         }
 
-        return this.toStockResponse(stock);
+        const result = await this.redisService.rememberWithSource(
+            cacheKey,
+            ttl,
+            async () => {
+                const stock = await this.stockModel.findOne({ ticker: normalizedTicker }).exec();
+
+                if (!stock) {
+                    throw new NotFoundException('Stock not found');
+                }
+
+                return this.toStockResponse(stock);
+            },
+        );
+
+        return {
+            ...result.value,
+            cache: {
+                source: result.source,
+            },
+        };
     }
 
     async getStockHistory(ticker: string): Promise<{
@@ -286,6 +345,8 @@ export class StocksService {
             },
         });
 
+        await this.invalidateStockCache(stock.ticker);
+
         return {
             message: 'Stock updated successfully',
             stock: this.toStockResponse(stock),
@@ -327,6 +388,8 @@ export class StocksService {
                 companyName: stock.companyName,
             },
         });
+
+        await this.invalidateStockCache(stock.ticker);
 
         return {
             message: 'Stock delisted successfully',
@@ -374,6 +437,15 @@ export class StocksService {
             message: 'Stock Listed successfully',
             stock: this.toStockResponse(stock),
         };
+    }
+
+    private async invalidateStockCache(ticker?: string): Promise<void> {
+        await this.redisService.deleteByPattern(CacheKeys.allStockLists());
+
+        if (ticker) {
+            await this.redisService.delete(CacheKeys.stockDetail(ticker));
+            await this.redisService.delete(CacheKeys.stockCurrentPrice(ticker));
+        }
     }
 
     private toStockResponse(stock: StockDocument): StockResponse {

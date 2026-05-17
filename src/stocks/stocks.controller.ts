@@ -31,8 +31,8 @@ export class StocksController {
     }
 
     @Get(':ticker')
-    getStockById(@Param('ticker') ticker: string) {
-        return this.stocksService.getStockById(ticker);
+    getStockById(@Param('ticker') ticker: string, @Query('clear') clear?: string) {
+        return this.stocksService.getStockById(ticker, clear === '1' || clear === 'true');
     }
 
     @Get(':ticker/history')

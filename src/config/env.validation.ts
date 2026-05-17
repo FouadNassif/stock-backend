@@ -61,4 +61,7 @@ export const envValidationSchema = Joi.object({
     RABBITMQ_REALTIME_QUEUE: Joi.string().default('realtime_events'),
 
     ANALYTICS_SERVICE_URL: Joi.string().uri().required(),
+
+    CACHE_STOCKS_TTL_SECONDS: Joi.number().default(300),
+    CACHE_PORTFOLIO_TTL_SECONDS: Joi.number().default(120),
 });

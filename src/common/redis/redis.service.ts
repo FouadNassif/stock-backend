@@ -13,6 +13,13 @@ export type RateLimitResult = {
     remainingAttempts: number;
     ttlSeconds: number;
 };
+
+export type CacheSource = 'cache' | 'database';
+
+export type CacheRememberResult<T> = {
+    value: T;
+    source: 'cache' | 'database';
+};
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
     private readonly logger = new Logger(RedisService.name);
@@ -117,6 +124,26 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
         await this.set(key, freshValue, ttlSeconds);
 
         return freshValue;
+    }
+
+    async rememberWithSource<T>(key: string, ttlSeconds: number, callback: () => Promise<T>): Promise<CacheRememberResult<T>> {
+        const cachedValue = await this.get<T>(key);
+
+        if (cachedValue !== null) {
+            return {
+                value: cachedValue,
+                source: 'cache',
+            };
+        }
+
+        const freshValue = await callback();
+
+        await this.set(key, freshValue, ttlSeconds);
+
+        return {
+            value: freshValue,
+            source: 'database',
+        };
     }
 
     async deleteByPattern(pattern: string): Promise<void> {
