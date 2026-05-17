@@ -22,7 +22,6 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { SystemAlertsModule } from './system-alerts/system-alerts.module';
 import { SchedulerJobsModule } from './scheduler/scheduler.module';
 import { AnalyticsModule } from './analytics/analytics.module';
-import { AppCahceModule } from './app-cahce/app-cahce.module';
 
 @Module({
   imports: [
@@ -55,8 +54,7 @@ import { AppCahceModule } from './app-cahce/app-cahce.module';
     RealtimeModule,
     SystemAlertsModule,
     SchedulerJobsModule,
-    AnalyticsModule,
-    AppCahceModule,
+    AnalyticsModule
   ],
   controllers: [AlertsController],
 })
