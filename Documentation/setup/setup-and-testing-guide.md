@@ -1,7 +1,5 @@
 # Setup and Testing Guide
 
-Status: Draft
-
 This guide explains how to run the Stock Market Platform locally, seed test data, and perform final checks before submission.
 
 ## Prerequisites

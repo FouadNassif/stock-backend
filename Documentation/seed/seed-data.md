@@ -1,7 +1,5 @@
 # Seed Data
 
-Status: Draft
-
 This document explains the local seed data used for end-to-end testing and Postman examples in the Stock Market Platform project.
 
 ## 1. Overview
