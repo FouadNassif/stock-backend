@@ -25,10 +25,11 @@ export class NotificationsService {
   }
 
   async sendOtp(email: string, code: string): Promise<void> {
-    const from = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
 
     await this.transporter.sendMail({
-      from,
+      from: `"${mailFromName}" <${mailFrom}>`,
       to: email,
       subject: 'Verify your Stock Market account',
       text: `Your OTP code is ${code}. It expires in 10 minutes.`,
@@ -37,10 +38,11 @@ export class NotificationsService {
   }
 
   async sendNewAdminEmail(email: string, tempPassword: string, fullName: string): Promise<void> {
-    const from = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
 
     await this.transporter.sendMail({
-      from,
+      from: `"${mailFromName}" <${mailFrom}>`,
       to: email,
       subject: 'Welcome to Stock Market',
       text: `Dear ${fullName}, your temporary password is ${tempPassword}. Please log in and change it immediately.`,
@@ -55,10 +57,11 @@ export class NotificationsService {
     amount: number,
     newBalance: number,
   ): Promise<void> {
-    const from = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
 
     await this.transporter.sendMail({
-      from,
+      from: `"${mailFromName}" <${mailFrom}>`,
       to: email,
       subject: 'Wallet Deposit Confirmation',
       text: `Dear ${fullName}, your wallet has been credited with $${amount}. Your new balance is $${newBalance}.`,
@@ -72,10 +75,11 @@ export class NotificationsService {
     amount: number,
     newBalance: number,
   ): Promise<void> {
-    const from = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
 
     await this.transporter.sendMail({
-      from,
+      from: `"${mailFromName}" <${mailFrom}>`,
       to: email,
       subject: 'Withdrawal Approved',
       text: `Dear ${fullName}, your withdrawal request of $${amount} has been approved. Your new wallet balance is $${newBalance}.`,
@@ -89,10 +93,11 @@ export class NotificationsService {
     amount: number,
     reason: string,
   ): Promise<void> {
-    const from = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
 
     await this.transporter.sendMail({
-      from,
+      from: `"${mailFromName}" <${mailFrom}>`,
       to: email,
       subject: 'Withdrawal Rejected',
       text: `Dear ${fullName}, your withdrawal request of $${amount} has been rejected. Reason: ${reason}`,
@@ -112,10 +117,11 @@ export class NotificationsService {
     walletBalance: number;
     realizedProfitLoss?: number;
   }): Promise<void> {
-    const from = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
 
     await this.transporter.sendMail({
-      from,
+      from: `"${mailFromName}" <${mailFrom}>`,
       to: params.email,
       subject:
         params.type === 'buy'
@@ -134,10 +140,11 @@ export class NotificationsService {
     fullName: string,
     code: string,
   ): Promise<void> {
-    const from = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
 
     await this.transporter.sendMail({
-      from,
+      from: `"${mailFromName}" <${mailFrom}>`,
       to: email,
       subject: 'Password Reset OTP',
       text: `Dear ${fullName}, your password reset code is ${code}. It expires in 10 minutes.`,
@@ -153,10 +160,11 @@ export class NotificationsService {
     email: string,
     fullName: string,
   ): Promise<void> {
-    const from = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
 
     await this.transporter.sendMail({
-      from,
+      from: `"${mailFromName}" <${mailFrom}>`,
       to: email,
       subject: 'Identity Verification Approved',
       text: `Dear ${fullName}, your identity verification has been approved. You can now continue using the platform features that require verified identity.`,
@@ -169,10 +177,11 @@ export class NotificationsService {
     fullName: string,
     reason: string,
   ): Promise<void> {
-    const from = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
 
     await this.transporter.sendMail({
-      from,
+      from: `"${mailFromName}" <${mailFrom}>`,
       to: email,
       subject: 'Identity Verification Rejected',
       text: `Dear ${fullName}, your identity verification has been rejected. Reason: ${reason}`,
@@ -185,10 +194,11 @@ export class NotificationsService {
     fullName: string,
     reason: string,
   ): Promise<void> {
-    const from = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
 
     await this.transporter.sendMail({
-      from,
+      from: `"${mailFromName}" <${mailFrom}>`,
       to: email,
       subject: 'Account Suspended',
       text: `Dear ${fullName}, your account has been suspended. Reason: ${reason}`,
@@ -205,10 +215,11 @@ export class NotificationsService {
     currentPrice: number;
     direction: 'above' | 'below';
   }): Promise<void> {
-    const from = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
+    const mailFromName = this.configService.get<string>('MAIL_FROM_NAME') ?? 'Stock Market Platform';
 
     await this.transporter.sendMail({
-      from,
+      from: `"${mailFromName}" <${mailFrom}>`,
       to: params.email,
       subject: `Price Alert Triggered: ${params.ticker}`,
       text: `Dear ${params.fullName}, your price alert for ${params.ticker} has been triggered. Current price is $${params.currentPrice}.`,
