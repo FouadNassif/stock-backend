@@ -62,8 +62,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      MONGO_URI: mongodb://mongodb:27017/stock-market?directConnection=true
-      MONGO_DATABASE: stock-market
+      MONGO_URI: mongodb://mongodb:27017/stock_market_platform?directConnection=true
+      MONGO_DATABASE: stock_market_platform
     depends_on:
       - mongodb
 
