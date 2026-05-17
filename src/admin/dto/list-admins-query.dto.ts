@@ -17,12 +17,16 @@ export class ListAdminsQueryDto {
     role?: AdminRole;
 
     @IsOptional()
-    @Transform(({ value }) => {
-        if (value === 'true') {
+    @Transform(({ value }: { value: unknown }) => {
+        if (value === undefined || value === null || value === '') {
+            return undefined;
+        }
+
+        if (value === 'true' || value === true) {
             return true;
         }
 
-        if (value === 'false') {
+        if (value === 'false' || value === false) {
             return false;
         }
 
