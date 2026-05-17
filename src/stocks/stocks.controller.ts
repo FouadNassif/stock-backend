@@ -1,13 +1,4 @@
-import {
-    Body,
-    Controller,
-    Get,
-    Param,
-    Patch,
-    Post,
-    Query,
-    UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 
 import { AdminRoles } from '../admin/decorators/admin-roles.decorator';
 import { CurrentAdmin } from '../admin/decorators/current-admin.decorator';
@@ -19,7 +10,6 @@ import { CreateStockDto } from './dto/create-stock.dto';
 import { ListStocksQueryDto } from './dto/list-stocks-query.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
 import { StockResponse, StocksService } from './stocks.service';
-import { AnyAuthGuard } from 'src/common/guards/any-auth.guard';
 
 @Controller('stocks')
 export class StocksController {

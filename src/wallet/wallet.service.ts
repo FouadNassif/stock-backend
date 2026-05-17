@@ -1,11 +1,5 @@
-import {
-    BadRequestException,
-    Injectable,
-    NotFoundException,
-    UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel, InjectConnection } from '@nestjs/mongoose';
-import { randomUUID } from 'crypto';
 import { Model, Types, Connection, ClientSession } from 'mongoose';
 
 import { DepositDto } from './dto/deposit.dto';
@@ -14,25 +8,19 @@ import { WithdrawDto } from './dto/withdraw.dto';
 import { ListWithdrawalsQueryDto } from './dto/list-withdrawals-query.dto';
 import { RejectWithdrawalDto } from './dto/reject-withdrawal.dto';
 
-import {
-    Transaction,
-    TransactionDocument,
-} from './schemas/transaction.schema';
-import {
-    Member,
-    MemberDocument,
-} from '../members/schemas/member.schema';
+import { Transaction, TransactionDocument } from './schemas/transaction.schema';
+import { Member, MemberDocument } from '../members/schemas/member.schema';
 import { NotificationsService } from '../notifications/notifications.service';
 import { checkMemberEligibility } from '../common/utils/member.util';
 import { TransactionResponse, WithdrawalFilter } from './types/transaction-response.type';
 import { toTransactionResponse } from './mappers/transaction.mapper';
 import { generateTransactionReference } from './utils/transaction.utils';
 import { TransactionStatus, TransactionType } from './types/transaction.type';
-import { AuditLogsService } from 'src/audit-logs/audit-logs.service';
-import { AuditActorType, AuditLogAction, AuditTargetType } from 'src/audit-logs/types/audit-log-action.type';
-import { PaymentsService } from 'src/payments/payments.service';
-import { NotificationEventType } from 'src/messaging/types/notification-event.type';
-import { MessagingService } from 'src/messaging/messaging.service';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { AuditActorType, AuditLogAction, AuditTargetType } from '../audit-logs/types/audit-log-action.type';
+import { PaymentsService } from '../payments/payments.service';
+import { NotificationEventType } from '../messaging/types/notification-event.type';
+import { MessagingService } from '../messaging/messaging.service';
 
 type TransactionFilter = {
     memberId: Types.ObjectId;

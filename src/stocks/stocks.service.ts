@@ -1,18 +1,18 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 
 import { CreateStockDto } from './dto/create-stock.dto';
 import { ListStocksQueryDto } from './dto/list-stocks-query.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
 import { PriceHistory, PriceHistoryDocument } from './schemas/price-history.schema';
 import { Stock, StockDocument } from './schemas/stock.schema';
-import { AuditLogsService } from 'src/audit-logs/audit-logs.service';
-import { AuditActorType, AuditLogAction, AuditTargetType } from 'src/audit-logs/types/audit-log-action.type';
-import { AlertsService } from 'src/alerts/alerts.service';
-import { RedisService } from 'src/common/redis/redis.service';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { AuditActorType, AuditLogAction, AuditTargetType } from '../audit-logs/types/audit-log-action.type';
+import { AlertsService } from '../alerts/alerts.service';
+import { RedisService } from '../common/redis/redis.service';
 import { ConfigService } from '@nestjs/config';
-import { CacheKeys } from 'src/common/redis/constants/cache-keys.constant';
+import { CacheKeys } from '../common/redis/constants/cache-keys.constant';
 
 type StockFilter = {
     sector?: string;
