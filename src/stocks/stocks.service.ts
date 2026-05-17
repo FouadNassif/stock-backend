@@ -433,6 +433,8 @@ export class StocksService {
             },
         });
 
+        await this.invalidateStockCache(stock.ticker);
+
         return {
             message: 'Stock Listed successfully',
             stock: this.toStockResponse(stock),
