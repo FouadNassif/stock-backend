@@ -25,6 +25,21 @@ import { AnyAuthGuard } from 'src/common/guards/any-auth.guard';
 export class StocksController {
     constructor(private readonly stocksService: StocksService) { }
 
+    @Get()
+    listStocks(@Query() query: ListStocksQueryDto) {
+        return this.stocksService.listStocks(query);
+    }
+
+    @Get(':ticker')
+    getStockById(@Param('ticker') ticker: string, @Query('clear') clear?: string) {
+        return this.stocksService.getStockById(ticker, clear === '1' || clear === 'true');
+    }
+
+    @Get(':ticker/history')
+    getStockHistory(@Param('ticker') ticker: string) {
+        return this.stocksService.getStockHistory(ticker);
+    }
+
     @Post('/create')
     @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
     @AdminRoles(AdminRole.Admin, AdminRole.Analyst)
@@ -38,21 +53,6 @@ export class StocksController {
         return this.stocksService.createStock(currentAdmin.sub, dto);
     }
 
-    @Get()
-    listStocks(@Query() query: ListStocksQueryDto) {
-        return this.stocksService.listStocks(query);
-    }
-
-    @Get(':ticker')
-    getStockById(@Param('ticker') ticker: string) {
-        return this.stocksService.getStockById(ticker);
-    }
-
-    @Get(':ticker/history')
-    getStockHistory(@Param('ticker') ticker: string) {
-        return this.stocksService.getStockHistory(ticker);
-    }
-
     @Patch(':id/update')
     @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
     @AdminRoles(AdminRole.Admin, AdminRole.Analyst)
@@ -64,10 +64,17 @@ export class StocksController {
         return this.stocksService.updateStock(id, currentAdmin.sub, dto);
     }
 
+    @Patch(':id/listed')
+    @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+    @AdminRoles(AdminRole.Admin, AdminRole.Analyst)
+    listStock(@Param('id') id: string, @CurrentAdmin() currentAdmin: AdminJwtPayload) {
+        return this.stocksService.listStock(id, currentAdmin.sub);
+    }
+
     @Patch(':id/delist')
     @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
     @AdminRoles(AdminRole.Admin, AdminRole.Analyst)
-    delistStock(@Param('id') id: string) {
-        return this.stocksService.delistStock(id);
+    delistStock(@Param('id') id: string, @CurrentAdmin() currentAdmin: AdminJwtPayload,) {
+        return this.stocksService.delistStock(id, currentAdmin.sub);
     }
 }

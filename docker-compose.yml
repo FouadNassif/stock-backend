@@ -3,8 +3,9 @@ services:
     image: mongo:7
     container_name: stock-market-mongodb
     restart: unless-stopped
+    command: [ "mongod", "--replSet", "rs0", "--bind_ip_all" ]
     ports:
-      - '27017:27017'
+      - "27017:27017"
     environment:
       MONGO_INITDB_DATABASE: stock-market
     volumes:
@@ -15,12 +16,58 @@ services:
     container_name: stock-market-mongo-express
     restart: unless-stopped
     ports:
-      - '8081:8081'
+      - "8081:8081"
     environment:
-      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017/
+      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017/?directConnection=true
       ME_CONFIG_BASICAUTH: false
+    depends_on:
+      - mongodb
+
+  redis:
+    image: redis:7-alpine
+    container_name: stock-market-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  redis-insight:
+    image: redis/redisinsight:latest
+    container_name: stock-market-redis-insight
+    restart: unless-stopped
+    ports:
+      - "5540:5540"
+    depends_on:
+      - redis
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: stock-market-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: stock_market
+      RABBITMQ_DEFAULT_PASS: stock_market_password
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  analytics-service:
+    build:
+      context: ./analytics-service
+    container_name: stock-market-analytics-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/stock_market_platform?directConnection=true
+      MONGO_DATABASE: stock_market_platform
     depends_on:
       - mongodb
 
 volumes:
   mongodb_data:
+  redis_data:
+  rabbitmq_data:

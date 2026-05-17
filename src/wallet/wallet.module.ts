@@ -9,9 +9,11 @@ import {
 } from './schemas/transaction.schema';
 import { WalletController } from './wallet.controller';
 import { WalletService } from './wallet.service';
+import { PaymentsModule } from 'src/payments/payments.module';
 
 @Module({
   imports: [
+    PaymentsModule,
     MongooseModule.forFeature([
       {
         name: Transaction.name,

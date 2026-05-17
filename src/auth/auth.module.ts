@@ -12,6 +12,7 @@ import { Otp, OtpSchema } from './schemas/otp.schema';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { MembersModule } from '../members/members.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { Admin, AdminSchema } from '../admin/schemas/admin.schema';
 
 @Module({
   imports: [
@@ -24,6 +25,10 @@ import { NotificationsModule } from '../notifications/notifications.module';
       {
         name: Otp.name,
         schema: OtpSchema,
+      },
+      {
+        name: Admin.name,
+        schema: AdminSchema,
       },
     ]),
 

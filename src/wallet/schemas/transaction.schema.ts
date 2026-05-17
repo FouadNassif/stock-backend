@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
+import { TransactionStatus, TransactionType } from '../types/transaction.type';
 
 export type TransactionDocument = HydratedDocument<Transaction> & {
     _id: Types.ObjectId;
@@ -7,18 +8,7 @@ export type TransactionDocument = HydratedDocument<Transaction> & {
     updatedAt: Date;
 };
 
-export enum TransactionType {
-    Deposit = 'deposit',
-    Withdrawal = 'withdrawal',
-    Buy = 'buy',
-    Sell = 'sell',
-}
 
-export enum TransactionStatus {
-    Pending = 'pending',
-    Completed = 'completed',
-    Rejected = 'rejected',
-}
 
 @Schema({ timestamps: true })
 export class Transaction {
@@ -47,6 +37,12 @@ export class Transaction {
     balanceAfter!: number;
 
     @Prop()
+    stripeSessionId?: string;
+
+    @Prop()
+    stripePaymentIntentId?: string;
+
+    @Prop()
     rejectedReason?: string;
 
     @Prop()
@@ -60,3 +56,5 @@ TransactionSchema.index({ memberId: 1, type: 1 });
 TransactionSchema.index({ status: 1 });
 TransactionSchema.index({ type: 1 });
 TransactionSchema.index({ referenceId: 1 }, { unique: true });
+TransactionSchema.index({ stripeSessionId: 1 });
+TransactionSchema.index({ stripePaymentIntentId: 1 });

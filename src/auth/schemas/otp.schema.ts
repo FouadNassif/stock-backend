@@ -3,6 +3,8 @@ import { HydratedDocument, Types } from 'mongoose';
 
 export type OtpDocument = HydratedDocument<Otp> & {
     _id: Types.ObjectId;
+    createdAt: Date;
+    updatedAt: Date;
 };
 
 export enum OtpPurpose {
