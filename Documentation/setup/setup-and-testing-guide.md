@@ -45,7 +45,7 @@ The app validates these major environment groups:
 - MongoDB: `MONGO_URI`
 - JWT secrets: `JWT_SECRET`, `JWT_EXPIRES_IN`
 - OTP settings: `OTP_EXPIRES_MINUTES`
-- SMTP/email: `MAIL_HOST`, `MAIL_PORT`, `MAIL_SECURE`, `MAIL_USER`, `MAIL_PASS`, `MAIL_FROM`
+- SMTP/email: `MAIL_HOST`, `MAIL_PORT`, `MAIL_SECURE`, `MAIL_USER`, `MAIL_PASS`, `MAIL_FROM`, `MAIL_FROM_NAME`
 - Seed/admin bootstrap values: `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_FULL_NAME`
 - Redis: `REDIS_HOST`, `REDIS_PORT`, optional `REDIS_PASSWORD`
 - Rate limit values for login, register, OTP, resend OTP, and forgot password flows
