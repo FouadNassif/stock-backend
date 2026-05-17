@@ -13,13 +13,14 @@ import { WalletModule } from './wallet/wallet.module';
 import { OrdersModule } from './orders/orders.module';
 import { RedisModule } from './common/redis/redis.module';
 import { AuditLogsModule } from './audit-logs/audit-logs.module';
-import { AuditLogsService } from './audit-logs/audit-logs.service';
 import { PaymentsModule } from './payments/payments.module';
 import { MessagingModule } from './messaging/messaging.module';
-import { AlertsService } from './alerts/alerts.service';
 import { AlertsController } from './alerts/alerts.controller';
 import { AlertsModule } from './alerts/alerts.module';
 import { RealtimeModule } from './realtime/realtime.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { SystemAlertsModule } from './system-alerts/system-alerts.module';
+import { SchedulerJobsModule } from './scheduler/scheduler.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { RealtimeModule } from './realtime/realtime.module';
         uri: configService.getOrThrow<string>('MONGO_URI'),
       }),
     }),
+    ScheduleModule.forRoot(),
     RedisModule,
     AuthModule,
     MembersModule,
@@ -49,6 +51,8 @@ import { RealtimeModule } from './realtime/realtime.module';
     MessagingModule,
     AlertsModule,
     RealtimeModule,
+    SystemAlertsModule,
+    SchedulerJobsModule,
   ],
   controllers: [AlertsController],
 })
