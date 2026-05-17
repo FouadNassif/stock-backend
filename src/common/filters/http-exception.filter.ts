@@ -31,9 +31,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
         const response = context.getResponse<Response>();
         const request = context.getRequest<Request>();
 
-        const statusCode = exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
+        const statusCode: HttpStatus =
+            exception instanceof HttpException
+                ? (exception.getStatus() as HttpStatus)
+                : HttpStatus.INTERNAL_SERVER_ERROR;
 
-        const exceptionResponse = exception instanceof HttpException ? exception.getResponse() : null;
+        const exceptionResponse =
+            exception instanceof HttpException ? exception.getResponse() : null;
 
         const formattedResponse = this.formatResponse(
             statusCode,
@@ -42,7 +46,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
         );
 
         if (statusCode >= HttpStatus.INTERNAL_SERVER_ERROR) {
-            const errorMessage = exception instanceof Error ? exception.message : 'Unknown error';
+            const errorMessage =
+                exception instanceof Error ? exception.message : 'Unknown error';
 
             this.logger.error(
                 `${request.method} ${request.url} ${statusCode} - ${errorMessage}`,
@@ -54,7 +59,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     }
 
     private formatResponse(
-        statusCode: number,
+        statusCode: HttpStatus,
         exceptionResponse: string | object | null,
         path: string,
     ): ErrorResponseBody {
@@ -73,7 +78,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
             return {
                 statusCode,
-                message: responseBody.message ?? this.getDefaultMessage(statusCode),
+                message:
+                    responseBody.message ?? this.getDefaultMessage(statusCode),
                 error: responseBody.error ?? this.getDefaultError(statusCode),
                 timestamp: new Date().toISOString(),
                 path,
@@ -92,7 +98,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         };
     }
 
-    private getDefaultMessage(statusCode: number): string {
+    private getDefaultMessage(statusCode: HttpStatus): string {
         switch (statusCode) {
             case HttpStatus.BAD_REQUEST:
                 return 'Bad request';
@@ -111,7 +117,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         }
     }
 
-    private getDefaultError(statusCode: number): string {
+    private getDefaultError(statusCode: HttpStatus): string {
         switch (statusCode) {
             case HttpStatus.BAD_REQUEST:
                 return 'Bad Request';

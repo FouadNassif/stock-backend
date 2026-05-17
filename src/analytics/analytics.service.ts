@@ -67,21 +67,19 @@ export class AnalyticsService {
         } catch (error: unknown) {
             if (error instanceof AxiosError) {
                 if (!error.response) {
-                    throw new ServiceUnavailableException(
-                        'Analytics service is unavailable',
-                    );
+                    throw new ServiceUnavailableException('Analytics service is unavailable');
                 }
+
+                const details: unknown = error.response.data;
 
                 throw new BadGatewayException({
                     message: 'Analytics service request failed',
                     statusCode: error.response.status,
-                    details: error.response.data,
+                    details,
                 });
             }
 
-            throw new ServiceUnavailableException(
-                'Analytics service is unavailable',
-            );
+            throw new ServiceUnavailableException('Analytics service is unavailable');
         }
     }
 
