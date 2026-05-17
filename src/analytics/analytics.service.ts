@@ -1,11 +1,7 @@
-import {
-    BadGatewayException,
-    Injectable,
-    ServiceUnavailableException,
-} from '@nestjs/common';
+import { BadGatewayException, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-import { AxiosError } from 'axios';
+import { AxiosError, AxiosResponse } from 'axios';
 import { lastValueFrom } from 'rxjs';
 
 import { ActiveMembersQueryDto } from './dto/active-members-query.dto';
@@ -61,14 +57,14 @@ export class AnalyticsService {
         params?: Record<string, string | number>,
     ): Promise<unknown> {
         try {
-            const response = await lastValueFrom(
-                this.httpService.get(`${this.analyticsServiceUrl}${path}`, {
+            const response: AxiosResponse<unknown> = await lastValueFrom(
+                this.httpService.get<unknown>(`${this.analyticsServiceUrl}${path}`, {
                     params,
                 }),
             );
 
             return response.data;
-        } catch (error) {
+        } catch (error: unknown) {
             if (error instanceof AxiosError) {
                 if (!error.response) {
                     throw new ServiceUnavailableException(
@@ -87,5 +83,9 @@ export class AnalyticsService {
                 'Analytics service is unavailable',
             );
         }
+    }
+
+    async getAdminSummary(): Promise<unknown> {
+        return this.get('/internal/analytics/admin/summary');
     }
 }
