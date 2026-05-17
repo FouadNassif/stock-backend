@@ -76,7 +76,7 @@ export class MembersService {
         const passwordHash = await bcrypt.hash(dto.newPassword, 10);
 
         eligibleMember.password = passwordHash;
-        await eligibleMember.save();
+        await eligibleMember.save({ validateModifiedOnly: true });
 
         return {
             message: 'Password changed successfully',
