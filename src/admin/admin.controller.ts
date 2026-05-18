@@ -34,7 +34,7 @@ export class AdminController {
   constructor(
     private readonly adminService: AdminService,
     private readonly walletService: WalletService,
-  ) {}
+  ) { }
 
   @Post('auth/login')
   login(@Body() dto: AdminLoginDto): Promise<{
@@ -73,21 +73,21 @@ export class AdminController {
 
   @Get('members')
   @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.Admin, AdminRole.Support)
+  @AdminRoles(AdminRole.Admin, AdminRole.Support, AdminRole.Analyst)
   listMembers(@Query() query: ListMembersQueryDto) {
     return this.adminService.listMembers(query);
   }
 
   @Get('members/:id')
   @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.Admin, AdminRole.Support)
+  @AdminRoles(AdminRole.Admin, AdminRole.Support, AdminRole.Analyst)
   getMemberById(@Param('id', ObjectIdPipe) id: string) {
     return this.adminService.getMemberById(id);
   }
 
   @Get('members/:id/transactions')
   @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.Admin, AdminRole.Support)
+  @AdminRoles(AdminRole.Admin, AdminRole.Support, AdminRole.Analyst)
   getMemberTransactions(
     @Param('id', ObjectIdPipe) id: string,
     @Query() query: ListTransactionsQueryDto,
@@ -97,7 +97,7 @@ export class AdminController {
 
   @Get('members/:id/orders')
   @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.Admin, AdminRole.Support)
+  @AdminRoles(AdminRole.Admin, AdminRole.Support, AdminRole.Analyst)
   getMemberOrders(
     @Param('id', ObjectIdPipe) id: string,
     @Query() query: ListOrdersQueryDto,

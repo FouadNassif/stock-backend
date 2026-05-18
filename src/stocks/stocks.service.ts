@@ -68,7 +68,7 @@ export class StocksService {
 
     private readonly redisService: RedisService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   async createStock(
     currentAdminId: string,
@@ -252,7 +252,8 @@ export class StocksService {
       recordedAt: Date;
     }[];
   }> {
-    const stock = await this.stockModel.findOne({ ticker }).exec();
+    const normalizedTicker = ticker.trim().toUpperCase();
+    const stock = await this.stockModel.findOne({ ticker: normalizedTicker }).exec();
 
     if (!stock) {
       throw new NotFoundException('Stock not found');

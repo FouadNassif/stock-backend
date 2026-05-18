@@ -1,4 +1,4 @@
-import { IsEnum, IsNumber, IsString, Min } from 'class-validator';
+import { IsNotEmpty, IsEnum, IsNumber, IsString, Min } from 'class-validator';
 
 export enum WalletAdjustmentType {
   Credit = 'credit',
@@ -14,5 +14,6 @@ export class ManualWalletAdjustmentDto {
   amount!: number;
 
   @IsString()
+  @IsNotEmpty()
   reason!: string;
 }
