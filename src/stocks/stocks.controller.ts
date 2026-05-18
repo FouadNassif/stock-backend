@@ -19,10 +19,11 @@ import { CreateStockDto } from './dto/create-stock.dto';
 import { ListStocksQueryDto } from './dto/list-stocks-query.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
 import { StockResponse, StocksService } from './stocks.service';
+import { ObjectIdPipe } from '../common/pipes/object-id.pipe';
 
 @Controller('stocks')
 export class StocksController {
-  constructor(private readonly stocksService: StocksService) {}
+  constructor(private readonly stocksService: StocksService) { }
 
   @Get()
   listStocks(@Query() query: ListStocksQueryDto) {
@@ -62,7 +63,7 @@ export class StocksController {
   @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(AdminRole.Admin, AdminRole.Analyst)
   updateStock(
-    @Param('id') id: string,
+    @Param('id', ObjectIdPipe) id: string,
     @CurrentAdmin() currentAdmin: AdminJwtPayload,
     @Body() dto: UpdateStockDto,
   ) {
@@ -73,7 +74,7 @@ export class StocksController {
   @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(AdminRole.Admin, AdminRole.Analyst)
   listStock(
-    @Param('id') id: string,
+    @Param('id', ObjectIdPipe) id: string,
     @CurrentAdmin() currentAdmin: AdminJwtPayload,
   ) {
     return this.stocksService.listStock(id, currentAdmin.sub);
@@ -83,7 +84,7 @@ export class StocksController {
   @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(AdminRole.Admin, AdminRole.Analyst)
   delistStock(
-    @Param('id') id: string,
+    @Param('id', ObjectIdPipe) id: string,
     @CurrentAdmin() currentAdmin: AdminJwtPayload,
   ) {
     return this.stocksService.delistStock(id, currentAdmin.sub);
