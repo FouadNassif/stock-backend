@@ -15,7 +15,6 @@ import { RedisModule } from './common/redis/redis.module';
 import { AuditLogsModule } from './audit-logs/audit-logs.module';
 import { PaymentsModule } from './payments/payments.module';
 import { MessagingModule } from './messaging/messaging.module';
-import { AlertsController } from './alerts/alerts.controller';
 import { AlertsModule } from './alerts/alerts.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -56,6 +55,6 @@ import { AnalyticsModule } from './analytics/analytics.module';
     SchedulerJobsModule,
     AnalyticsModule,
   ],
-  controllers: [AlertsController],
+  controllers: [],
 })
-export class AppModule {}
+export class AppModule { }
