@@ -20,6 +20,7 @@ import {
   PriceAlertDocument,
 } from './schemas/price-alert.schema';
 import { PriceAlertResponse } from './types/price-alert-response.type';
+import { ConfigService } from '@nestjs/config';
 
 type PriceAlertFilter = {
   memberId: Types.ObjectId;
@@ -27,9 +28,6 @@ type PriceAlertFilter = {
   direction?: PriceAlertDirection;
   triggered?: boolean;
 };
-
-const MAX_ACTIVE_PRICE_ALERTS_PER_MEMBER = 6;
-const MAX_ACTIVE_PRICE_ALERTS_PER_STOCK = 2;
 
 @Injectable()
 export class AlertsService {
@@ -44,7 +42,8 @@ export class AlertsService {
     private readonly stockModel: Model<StockDocument>,
 
     private readonly messagingService: MessagingService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) { }
 
   async createAlert(
     currentMemberId: string,
@@ -53,6 +52,14 @@ export class AlertsService {
     message: string;
     alert: PriceAlertResponse;
   }> {
+    const maxActiveAlertsPerMember = this.configService.getOrThrow<number>(
+      'MAX_ACTIVE_PRICE_ALERTS_PER_MEMBER',
+    );
+
+    const maxActiveAlertsPerStock = this.configService.getOrThrow<number>(
+      'MAX_ACTIVE_PRICE_ALERTS_PER_STOCK',
+    );
+
     const member = await this.memberModel.findById(currentMemberId).exec();
     const eligibleMember = checkMemberEligibility(member, true);
 
@@ -87,9 +94,9 @@ export class AlertsService {
       triggered: false,
     });
 
-    if (activeAlertsCount >= MAX_ACTIVE_PRICE_ALERTS_PER_MEMBER) {
+    if (activeAlertsCount >= maxActiveAlertsPerMember) {
       throw new BadRequestException(
-        `You can only have up to ${MAX_ACTIVE_PRICE_ALERTS_PER_MEMBER} active price alerts.`,
+        `You can only have up to ${maxActiveAlertsPerMember} active price alerts.`,
       );
     }
 
@@ -101,9 +108,9 @@ export class AlertsService {
       },
     );
 
-    if (activeAlertsForStockCount >= MAX_ACTIVE_PRICE_ALERTS_PER_STOCK) {
+    if (activeAlertsForStockCount >= maxActiveAlertsPerStock) {
       throw new BadRequestException(
-        `You can only have up to ${MAX_ACTIVE_PRICE_ALERTS_PER_STOCK} active alerts per stock.`,
+        `You can only have up to ${maxActiveAlertsPerStock} active alerts per stock.`,
       );
     }
 
