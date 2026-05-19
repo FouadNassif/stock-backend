@@ -376,7 +376,10 @@ Notes:
 
 - `direction` values are `above` and `below`.
 - Duplicate active alert prevention is handled in service logic. The compound alert-condition index is not declared as unique.
-- Triggered alerts can publish notification events.
+- Active alerts use `triggered: false`; triggered alerts set `triggered: true` and `triggeredAt`.
+- Triggered alerts do not count toward active alert limit checks.
+- Price alert evaluation runs asynchronously after a stock price update through the RabbitMQ `stock.price.updated` consumer.
+- Matching active alerts are marked triggered and publish `price_alert.triggered` notification events for email delivery.
 
 ### AuditLog
 

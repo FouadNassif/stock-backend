@@ -52,6 +52,11 @@ The app validates these major environment groups:
 - Analytics service URL: `ANALYTICS_SERVICE_URL`
 - Cache TTL values: `CACHE_STOCKS_TTL_SECONDS`, `CACHE_PORTFOLIO_TTL_SECONDS`
 
+The environment template also documents price alert limit values:
+
+- `MAX_ACTIVE_PRICE_ALERTS_PER_MEMBER` for active alerts across all stocks.
+- `MAX_ACTIVE_PRICE_ALERTS_PER_STOCK` for active alerts on the same stock.
+
 Use local placeholder values for development secrets. Do not include real production secrets in documentation, commits, screenshots, or Postman exports.
 
 ## Docker Services
@@ -212,6 +217,25 @@ Recommended testing order:
 10. Test analytics.
 11. Test system alerts.
 12. Test audit logs.
+
+Price alert testing flow:
+
+1. Login as a member.
+2. Create a price alert above or below the current stock price.
+3. Login as an admin or analyst.
+4. Update the stock `currentPrice` so it crosses the alert target.
+5. Confirm the stock update request returns successfully.
+6. Confirm the RabbitMQ consumer processes `stock.price.updated`.
+7. Confirm the alert becomes triggered and the member receives an email through `NotificationsService`/Nodemailer.
+
+Price alert limit test cases:
+
+- Create 2 active alerts for the same stock: should pass.
+- Create a 3rd active alert for the same stock: should fail.
+- Create up to 6 active alerts total: should pass.
+- Create a 7th active alert: should fail.
+
+Triggered and deleted alerts should not count toward these active alert limits.
 
 ## Common Problems
 
