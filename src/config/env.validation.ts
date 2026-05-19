@@ -25,6 +25,9 @@ export const envValidationSchema = Joi.object({
   REDIS_HOST: Joi.string().required(),
   REDIS_PORT: Joi.string().required(),
 
+  MAX_ACTIVE_PRICE_ALERTS_PER_MEMBER: Joi.number().integer().min(1).required(),
+  MAX_ACTIVE_PRICE_ALERTS_PER_STOCK: Joi.number().integer().min(1).required(),
+
   RATE_LOGIN_STAGE1_LIMIT: Joi.number().integer().min(1).default(5),
   RATE_LOGIN_STAGE1_TIME: Joi.number().integer().min(1).default(900),
   RATE_LOGIN_STAGE2_LIMIT: Joi.number().integer().min(1).default(20),
