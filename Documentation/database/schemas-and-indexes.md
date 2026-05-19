@@ -36,18 +36,21 @@ Purpose:
 
 Important fields:
 
-- `fullName`: string, required, trimmed.
-- `email`: string, required, unique, lowercase, trimmed.
-- `nationalId`: string, required, unique, trimmed.
-- `dateOfBirth`: Date, required.
-- `password`: string, optional, hashed after password setup.
-- `emailVerified`: boolean, default `false`.
-- `referralCode`: string, required, unique, uppercase, trimmed.
-- `identityStatus`: enum, default `pending`.
-- `isActive`: boolean, default `true`.
-- `walletBalance`: number, default `0`, min `0`.
-- `lastDepositAt`: Date, optional.
-- `createdAt`, `updatedAt`: added by timestamps.
+| Field name | Required | Type | Options / Rules / Notes |
+| --- | --- | --- | --- |
+| `fullName` | Yes | String | string, required, trimmed |
+| `email` | Yes | String | string, required, unique, lowercase, trimmed |
+| `nationalId` | Yes | String | string, required, unique, trimmed |
+| `dateOfBirth` | Yes | Date | Date, required |
+| `password` | No | String | string, optional, hashed after password setup |
+| `emailVerified` | No | Boolean | boolean, default `false` |
+| `referralCode` | Yes | String | string, required, unique, uppercase, trimmed |
+| `identityStatus` | No | Enum | enum, default `pending` |
+| `isActive` | No | Boolean | boolean, default `true` |
+| `walletBalance` | No | Number | number, default `0`, min `0` |
+| `lastDepositAt` | No | Date | Date, optional |
+| `createdAt` | Auto | Date | added by timestamps |
+| `updatedAt` | Auto | Date | added by timestamps |
 
 Relations:
 
@@ -75,15 +78,18 @@ Purpose:
 
 Important fields:
 
-- `fullName`: string, required, trimmed.
-- `email`: string, required, unique, lowercase, trimmed.
-- `password`: string, required, hashed.
-- `role`: enum, required.
-- `isActive`: boolean, default `true`.
-- `mustChangePassword`: boolean, default `false`.
-- `createdBy`: ObjectId reference to `Admin`, optional.
-- `lastLoginAt`: Date, optional.
-- `createdAt`, `updatedAt`: added by timestamps.
+| Field name | Required | Type | Options / Rules / Notes |
+| --- | --- | --- | --- |
+| `fullName` | Yes | String | string, required, trimmed |
+| `email` | Yes | String | string, required, unique, lowercase, trimmed |
+| `password` | Yes | String | string, required, hashed |
+| `role` | Yes | Enum | enum, required |
+| `isActive` | No | Boolean | boolean, default `true` |
+| `mustChangePassword` | No | Boolean | boolean, default `false` |
+| `createdBy` | No | ObjectId | ObjectId reference to `Admin`, optional |
+| `lastLoginAt` | No | Date | Date, optional |
+| `createdAt` | Auto | Date | added by timestamps |
+| `updatedAt` | Auto | Date | added by timestamps |
 
 Relations:
 
@@ -110,18 +116,21 @@ Purpose:
 
 Important fields:
 
-- `memberId`: ObjectId reference to `Member`, required.
-- `verificationId`: string, required, unique.
-- `codeHash`: string, required, hashed OTP value.
-- `purpose`: enum, required.
-- `expiresAt`: Date, required.
-- `used`: boolean, default `false`.
-- `usedAt`: Date, optional.
-- `attempts`: number, default `0`.
-- `maxAttempts`: number, default `5`.
-- `ipAddress`: string, optional.
-- `userAgent`: string, optional.
-- `createdAt`, `updatedAt`: added by timestamps.
+| Field name | Required | Type | Options / Rules / Notes |
+| --- | --- | --- | --- |
+| `memberId` | Yes | ObjectId | ObjectId reference to `Member`, required |
+| `verificationId` | Yes | String | string, required, unique |
+| `codeHash` | Yes | String | string, required, hashed OTP value |
+| `purpose` | Yes | Enum | enum, required |
+| `expiresAt` | Yes | Date | Date, required |
+| `used` | No | Boolean | boolean, default `false` |
+| `usedAt` | No | Date | Date, optional |
+| `attempts` | No | Number | number, default `0` |
+| `maxAttempts` | No | Number | number, default `5` |
+| `ipAddress` | No | String | string, optional |
+| `userAgent` | No | String | string, optional |
+| `createdAt` | Auto | Date | added by timestamps |
+| `updatedAt` | Auto | Date | added by timestamps |
 
 Relations:
 
@@ -147,13 +156,16 @@ Purpose:
 
 Important fields:
 
-- `referrerId`: ObjectId reference to `Member`, required.
-- `referredMemberId`: ObjectId reference to `Member`, required, unique.
-- `referralCode`: string, required, uppercase, trimmed.
-- `status`: enum, required, default `registered`.
-- `registeredAt`: Date, optional.
-- `emailVerifiedAt`: Date, optional.
-- `createdAt`, `updatedAt`: added by timestamps.
+| Field name | Required | Type | Options / Rules / Notes |
+| --- | --- | --- | --- |
+| `referrerId` | Yes | ObjectId | ObjectId reference to `Member`, required |
+| `referredMemberId` | Yes | ObjectId | ObjectId reference to `Member`, required, unique |
+| `referralCode` | Yes | String | string, required, uppercase, trimmed |
+| `status` | Yes | Enum | enum, required, default `registered` |
+| `registeredAt` | No | Date | Date, optional |
+| `emailVerifiedAt` | No | Date | Date, optional |
+| `createdAt` | Auto | Date | added by timestamps |
+| `updatedAt` | Auto | Date | added by timestamps |
 
 Relations:
 
@@ -180,13 +192,16 @@ Purpose:
 
 Important fields:
 
-- `ticker`: string, required, unique, uppercase, trimmed.
-- `companyName`: string, required, trimmed.
-- `sector`: string, required, trimmed.
-- `description`: string, optional.
-- `currentPrice`: number, required, min `0`.
-- `isListed`: boolean, default `true`.
-- `createdAt`, `updatedAt`: added by timestamps.
+| Field name | Required | Type | Options / Rules / Notes |
+| --- | --- | --- | --- |
+| `ticker` | Yes | String | string, required, unique, uppercase, trimmed |
+| `companyName` | Yes | String | string, required, trimmed |
+| `sector` | Yes | String | string, required, trimmed |
+| `description` | No | String | string, optional |
+| `currentPrice` | Yes | Number | number, required, min `0` |
+| `isListed` | No | Boolean | boolean, default `true` |
+| `createdAt` | Auto | Date | added by timestamps |
+| `updatedAt` | Auto | Date | added by timestamps |
 
 Relations:
 
@@ -212,10 +227,13 @@ Purpose:
 
 Important fields:
 
-- `stockId`: ObjectId reference to `Stock`, required.
-- `price`: number, required, min `0`.
-- `recordedAt`: Date, required, default `Date.now`.
-- `createdAt`, `updatedAt`: added by timestamps.
+| Field name | Required | Type | Options / Rules / Notes |
+| --- | --- | --- | --- |
+| `stockId` | Yes | ObjectId | ObjectId reference to `Stock`, required |
+| `price` | Yes | Number | number, required, min `0` |
+| `recordedAt` | Yes | Date | Date, required, default `Date.now` |
+| `createdAt` | Auto | Date | added by timestamps |
+| `updatedAt` | Auto | Date | added by timestamps |
 
 Relations:
 
@@ -238,19 +256,22 @@ Purpose:
 
 Important fields:
 
-- `memberId`: ObjectId reference to `Member`, required.
-- `type`: enum, required.
-- `amount`: number, required, min `0`.
-- `status`: enum, required, default `pending`.
-- `referenceId`: string, required, trimmed.
-- `notes`: string, optional.
-- `balanceBefore`: number, required, min `0`.
-- `balanceAfter`: number, required, min `0`.
-- `stripeSessionId`: string, optional.
-- `stripePaymentIntentId`: string, optional.
-- `rejectedReason`: string, optional.
-- `processedAt`: Date, optional.
-- `createdAt`, `updatedAt`: added by timestamps.
+| Field name | Required | Type | Options / Rules / Notes |
+| --- | --- | --- | --- |
+| `memberId` | Yes | ObjectId | ObjectId reference to `Member`, required |
+| `type` | Yes | Enum | enum, required |
+| `amount` | Yes | Number | number, required, min `0` |
+| `status` | Yes | Enum | enum, required, default `pending` |
+| `referenceId` | Yes | String | string, required, trimmed |
+| `notes` | No | String | string, optional |
+| `balanceBefore` | Yes | Number | number, required, min `0` |
+| `balanceAfter` | Yes | Number | number, required, min `0` |
+| `stripeSessionId` | No | String | string, optional |
+| `stripePaymentIntentId` | No | String | string, optional |
+| `rejectedReason` | No | String | string, optional |
+| `processedAt` | No | Date | Date, optional |
+| `createdAt` | Auto | Date | added by timestamps |
+| `updatedAt` | Auto | Date | added by timestamps |
 
 Relations:
 
@@ -281,14 +302,17 @@ Purpose:
 
 Important fields:
 
-- `memberId`: ObjectId reference to `Member`, required.
-- `stockId`: ObjectId reference to `Stock`, required.
-- `sharesHeld`: number, required, min `0`.
-- `avgPurchasePrice`: number, required, min `0`.
-- `status`: enum, required, default `open`.
-- `openedAt`: Date, required, default `Date.now`.
-- `closedAt`: Date, optional.
-- `createdAt`, `updatedAt`: added by timestamps.
+| Field name | Required | Type | Options / Rules / Notes |
+| --- | --- | --- | --- |
+| `memberId` | Yes | ObjectId | ObjectId reference to `Member`, required |
+| `stockId` | Yes | ObjectId | ObjectId reference to `Stock`, required |
+| `sharesHeld` | Yes | Number | number, required, min `0` |
+| `avgPurchasePrice` | Yes | Number | number, required, min `0` |
+| `status` | Yes | Enum | enum, required, default `open` |
+| `openedAt` | Yes | Date | Date, required, default `Date.now` |
+| `closedAt` | No | Date | Date, optional |
+| `createdAt` | Auto | Date | added by timestamps |
+| `updatedAt` | Auto | Date | added by timestamps |
 
 Relations:
 
@@ -315,16 +339,19 @@ Purpose:
 
 Important fields:
 
-- `memberId`: ObjectId reference to `Member`, required.
-- `stockId`: ObjectId reference to `Stock`, required.
-- `positionId`: ObjectId reference to `Position`, required.
-- `type`: enum, required.
-- `quantity`: number, required, min `1`.
-- `priceAtExecution`: number, required, min `0`.
-- `totalAmount`: number, required, min `0`.
-- `status`: enum, required, default `completed`.
-- `realizedProfitLoss`: number, default `0`.
-- `createdAt`, `updatedAt`: added by timestamps.
+| Field name | Required | Type | Options / Rules / Notes |
+| --- | --- | --- | --- |
+| `memberId` | Yes | ObjectId | ObjectId reference to `Member`, required |
+| `stockId` | Yes | ObjectId | ObjectId reference to `Stock`, required |
+| `positionId` | Yes | ObjectId | ObjectId reference to `Position`, required |
+| `type` | Yes | Enum | enum, required |
+| `quantity` | Yes | Number | number, required, min `1` |
+| `priceAtExecution` | Yes | Number | number, required, min `0` |
+| `totalAmount` | Yes | Number | number, required, min `0` |
+| `status` | Yes | Enum | enum, required, default `completed` |
+| `realizedProfitLoss` | No | Number | number, default `0` |
+| `createdAt` | Auto | Date | added by timestamps |
+| `updatedAt` | Auto | Date | added by timestamps |
 
 Relations:
 
@@ -352,13 +379,16 @@ Purpose:
 
 Important fields:
 
-- `memberId`: ObjectId reference to `Member`, required.
-- `stockId`: ObjectId reference to `Stock`, required.
-- `targetPrice`: number, required, min `0`.
-- `direction`: enum, required.
-- `triggered`: boolean, default `false`.
-- `triggeredAt`: Date, optional.
-- `createdAt`, `updatedAt`: added by timestamps.
+| Field name | Required | Type | Options / Rules / Notes |
+| --- | --- | --- | --- |
+| `memberId` | Yes | ObjectId | ObjectId reference to `Member`, required |
+| `stockId` | Yes | ObjectId | ObjectId reference to `Stock`, required |
+| `targetPrice` | Yes | Number | number, required, min `0` |
+| `direction` | Yes | Enum | enum, required |
+| `triggered` | No | Boolean | boolean, default `false` |
+| `triggeredAt` | No | Date | Date, optional |
+| `createdAt` | Auto | Date | added by timestamps |
+| `updatedAt` | Auto | Date | added by timestamps |
 
 Relations:
 
@@ -389,18 +419,21 @@ Purpose:
 
 Important fields:
 
-- `actorId`: ObjectId, optional.
-- `actorType`: enum, required.
-- `action`: enum, required.
-- `targetType`: enum, required.
-- `targetId`: ObjectId, optional.
-- `description`: string, required.
-- `reason`: string, optional.
-- `changes`: mixed object, optional.
-- `metadata`: mixed object, optional.
-- `ipAddress`: string, optional.
-- `userAgent`: string, optional.
-- `createdAt`, `updatedAt`: added by timestamps.
+| Field name | Required | Type | Options / Rules / Notes |
+| --- | --- | --- | --- |
+| `actorId` | No | ObjectId | ObjectId, optional |
+| `actorType` | Yes | Enum | enum, required |
+| `action` | Yes | Enum | enum, required |
+| `targetType` | Yes | Enum | enum, required |
+| `targetId` | No | ObjectId | ObjectId, optional |
+| `description` | Yes | String | string, required |
+| `reason` | No | String | string, optional |
+| `changes` | No | Mixed/Object | mixed object, optional |
+| `metadata` | No | Mixed/Object | mixed object, optional |
+| `ipAddress` | No | String | string, optional |
+| `userAgent` | No | String | string, optional |
+| `createdAt` | Auto | Date | added by timestamps |
+| `updatedAt` | Auto | Date | added by timestamps |
 
 Relations:
 
@@ -427,14 +460,17 @@ Purpose:
 
 Important fields:
 
-- `members`: snapshot array, default `[]`.
-- `members.memberId`: ObjectId reference to `Member`, required inside snapshot.
-- `members.fullName`: string, required.
-- `members.email`: string, required.
-- `members.walletBalance`: number, required.
-- `totalCount`: number, required, default `0`.
-- `checkedAt`: Date, required.
-- `createdAt`, `updatedAt`: added by timestamps.
+| Field name | Required | Type | Options / Rules / Notes |
+| --- | --- | --- | --- |
+| `members` | No | Array | snapshot array, default `[]` |
+| `members.memberId` | Yes | ObjectId | ObjectId reference to `Member`, required inside snapshot |
+| `members.fullName` | Yes | String | string, required |
+| `members.email` | Yes | String | string, required |
+| `members.walletBalance` | Yes | Number | number, required |
+| `totalCount` | Yes | Number | number, required, default `0` |
+| `checkedAt` | Yes | Date | Date, required |
+| `createdAt` | Auto | Date | added by timestamps |
+| `updatedAt` | Auto | Date | added by timestamps |
 
 Relations:
 
@@ -458,19 +494,22 @@ Purpose:
 
 Important fields:
 
-- `withdrawals`: snapshot array, default `[]`.
-- `withdrawals.transactionId`: ObjectId reference to `Transaction`, required.
-- `withdrawals.memberId`: ObjectId reference to `Member`, required.
-- `withdrawals.memberFullName`: string, required, trimmed.
-- `withdrawals.memberEmail`: string, required, lowercase, trimmed.
-- `withdrawals.amount`: number, required, min `0`.
-- `withdrawals.status`: string, required.
-- `withdrawals.requestedAt`: Date, required.
-- `withdrawals.ageHours`: number, required, min `0`.
-- `totalCount`: number, required, default `0`.
-- `thresholdHours`: number, required, default `24`.
-- `checkedAt`: Date, required.
-- `createdAt`, `updatedAt`: added by timestamps.
+| Field name | Required | Type | Options / Rules / Notes |
+| --- | --- | --- | --- |
+| `withdrawals` | No | Array | snapshot array, default `[]` |
+| `withdrawals.transactionId` | Yes | ObjectId | ObjectId reference to `Transaction`, required |
+| `withdrawals.memberId` | Yes | ObjectId | ObjectId reference to `Member`, required |
+| `withdrawals.memberFullName` | Yes | String | string, required, trimmed |
+| `withdrawals.memberEmail` | Yes | String | string, required, lowercase, trimmed |
+| `withdrawals.amount` | Yes | Number | number, required, min `0` |
+| `withdrawals.status` | Yes | String | string, required |
+| `withdrawals.requestedAt` | Yes | Date | Date, required |
+| `withdrawals.ageHours` | Yes | Number | number, required, min `0` |
+| `totalCount` | Yes | Number | number, required, default `0` |
+| `thresholdHours` | Yes | Number | number, required, default `24` |
+| `checkedAt` | Yes | Date | Date, required |
+| `createdAt` | Auto | Date | added by timestamps |
+| `updatedAt` | Auto | Date | added by timestamps |
 
 Relations:
 
