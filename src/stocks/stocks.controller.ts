@@ -23,7 +23,7 @@ import { ObjectIdPipe } from '../common/pipes/object-id.pipe';
 
 @Controller('stocks')
 export class StocksController {
-  constructor(private readonly stocksService: StocksService) { }
+  constructor(private readonly stocksService: StocksService) {}
 
   @Get()
   listStocks(@Query() query: ListStocksQueryDto) {
