@@ -8382,6 +8382,62 @@
               ],
               "cookie": [],
               "body": "{\n    \"success\": true,\n    \"statusCode\": 200,\n    \"message\": \"Request completed successfully\",\n    \"data\": {\n        \"positions\": [],\n        \"summary\": {\n            \"totalPositions\": 0,\n            \"totalInvestedValue\": 0,\n            \"totalCurrentValue\": 0,\n            \"totalUnrealizedProfitLoss\": 0\n        },\n        \"cache\": {\n            \"source\": \"cache\"\n        }\n    },\n    \"timestamp\": \"2026-05-17T15:40:12.492Z\",\n    \"path\": \"/api/orders/portfolio\"\n}"
+            },
+            {
+              "name": "UnAuth",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"stockId\": \"6a0239a0a70cadaf12297d64\",\r\n    \"quantity\": 2\r\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/orders/portfolio",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "portfolio"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "136"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"88-4KEU4S57XHcMVKh5NxMY++wd/mw\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 19 May 2026 17:08:13 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"statusCode\": 401,\n    \"message\": \"Unauthorized\",\n    \"error\": \"Unauthorized\",\n    \"timestamp\": \"2026-05-19T17:08:13.376Z\",\n    \"path\": \"/api/orders/portfolio\"\n}"
             }
           ]
         },
@@ -8950,6 +9006,63 @@
               ],
               "cookie": [],
               "body": "{\n    \"success\": true,\n    \"statusCode\": 200,\n    \"message\": \"Request completed successfully\",\n    \"data\": {\n        \"data\": [\n            {\n                \"id\": \"6a09da0371f9e2f0551fa111\",\n                \"memberId\": \"6a0613c2de5c1d7f63df0694\",\n                \"stockId\": \"6a0984d086819de0162d5f81\",\n                \"targetPrice\": 40,\n                \"direction\": \"above\",\n                \"triggered\": false,\n                \"createdAt\": \"2026-05-17T15:08:51.523Z\",\n                \"updatedAt\": \"2026-05-17T15:08:51.523Z\",\n                \"stock\": {\n                    \"id\": \"6a0984d086819de0162d5f81\",\n                    \"ticker\": \"PFE\",\n                    \"companyName\": \"Pfizer Inc.\",\n                    \"sector\": \"Healthcare\",\n                    \"currentPrice\": 45,\n                    \"isListed\": true\n                }\n            },\n            {\n                \"id\": \"6a09d54b71f9e2f0551fa109\",\n                \"memberId\": \"6a0613c2de5c1d7f63df0694\",\n                \"stockId\": \"6a0984d086819de0162d5f81\",\n                \"targetPrice\": 40,\n                \"direction\": \"above\",\n                \"triggered\": true,\n                \"triggeredAt\": \"2026-05-17T14:49:03.570Z\",\n                \"createdAt\": \"2026-05-17T14:48:43.011Z\",\n                \"updatedAt\": \"2026-05-17T14:49:03.571Z\",\n                \"stock\": {\n                    \"id\": \"6a0984d086819de0162d5f81\",\n                    \"ticker\": \"PFE\",\n                    \"companyName\": \"Pfizer Inc.\",\n                    \"sector\": \"Healthcare\",\n                    \"currentPrice\": 45,\n                    \"isListed\": true\n                }\n            }\n        ],\n        \"pagination\": {\n            \"page\": 1,\n            \"limit\": 10,\n            \"total\": 2,\n            \"totalPages\": 1\n        }\n    },\n    \"timestamp\": \"2026-05-17T15:22:03.943Z\",\n    \"path\": \"/api/alerts?stockId=6a0984d086819de0162d5f81\"\n}"
+            },
+            {
+              "name": "UnAuth",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/alerts?stockId={{stock_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "alerts"
+                  ],
+                  "query": [
+                    {
+                      "key": "stockId",
+                      "value": "{{stock_id}}"
+                    }
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "175"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"af-cieM1R/CqPi5Y+J2vmsmk1XO2I0\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 19 May 2026 17:08:38 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"statusCode\": 400,\n    \"message\": [\n        \"stockId must be a mongodb id\"\n    ],\n    \"error\": \"Bad Request\",\n    \"timestamp\": \"2026-05-19T17:08:38.201Z\",\n    \"path\": \"/api/alerts?stockId=6a0984d086819de0162d5f7\"\n}"
             }
           ]
         },
@@ -9586,6 +9699,58 @@
               ],
               "cookie": [],
               "body": "{\n    \"success\": true,\n    \"statusCode\": 200,\n    \"message\": \"Request completed successfully\",\n    \"data\": {\n        \"walletBalanceTotal\": 1444,\n        \"openPositionsValue\": 34,\n        \"totalAum\": 1478\n    },\n    \"timestamp\": \"2026-05-17T08:10:34.681Z\",\n    \"path\": \"/api/analytics/aum\"\n}"
+            },
+            {
+              "name": "UnAuth",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/analytics/aum",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "analytics",
+                    "aum"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "133"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"85-pC1sLXY3g13ABnozdFNFyLVg+0w\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 19 May 2026 17:08:56 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"statusCode\": 401,\n    \"message\": \"Unauthorized\",\n    \"error\": \"Unauthorized\",\n    \"timestamp\": \"2026-05-19T17:08:56.857Z\",\n    \"path\": \"/api/analytics/aum\"\n}"
             }
           ]
         },
@@ -10159,6 +10324,59 @@
                   ],
                   "cookie": [],
                   "body": "{\n    \"success\": true,\n    \"statusCode\": 200,\n    \"message\": \"Request completed successfully\",\n    \"data\": {\n        \"id\": \"6a08901435d34ab235075b8d\",\n        \"members\": [\n            {\n                \"memberId\": \"6a02492e692924cd79875ee9\",\n                \"fullName\": \"Fouad Nassif\",\n                \"email\": \"a52fouad@gmail.com\",\n                \"walletBalance\": -2\n            }\n        ],\n        \"totalCount\": 1,\n        \"checkedAt\": \"2026-05-16T15:41:08.144Z\",\n        \"createdAt\": \"2026-05-16T15:41:08.153Z\",\n        \"updatedAt\": \"2026-05-16T15:41:08.153Z\"\n    },\n    \"timestamp\": \"2026-05-16T15:41:18.288Z\",\n    \"path\": \"/api/admin/alerts/negative-balances\"\n}"
+                },
+                {
+                  "name": "UnAuth",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/admin/alerts/negative-balances",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "admin",
+                        "alerts",
+                        "negative-balances"
+                      ]
+                    }
+                  },
+                  "status": "Unauthorized",
+                  "code": 401,
+                  "_postman_previewlanguage": null,
+                  "header": [
+                    {
+                      "key": "X-Powered-By",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Content-Length",
+                      "value": "150"
+                    },
+                    {
+                      "key": "ETag",
+                      "value": "W/\"96-U6I/ltzL95DW9eEahj/6/cXL99I\""
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Tue, 19 May 2026 17:07:43 GMT"
+                    },
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    },
+                    {
+                      "key": "Keep-Alive",
+                      "value": "timeout=5"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"statusCode\": 401,\n    \"message\": \"Unauthorized\",\n    \"error\": \"Unauthorized\",\n    \"timestamp\": \"2026-05-19T17:07:43.285Z\",\n    \"path\": \"/api/admin/alerts/negative-balances\"\n}"
                 }
               ]
             },
@@ -10234,6 +10452,60 @@
                   ],
                   "cookie": [],
                   "body": "{\n    \"success\": true,\n    \"statusCode\": 201,\n    \"message\": \"Negative balance check completed successfully\",\n    \"data\": {\n        \"message\": \"Negative balance check completed successfully\",\n        \"alert\": {\n            \"id\": \"6a09d39e71f9e2f0551fa103\",\n            \"members\": [\n                {\n                    \"memberId\": \"6a0984d086819de0162d5f7c\",\n                    \"fullName\": \"Negative Balance Seed Member\",\n                    \"email\": \"negative.seed@example.com\",\n                    \"walletBalance\": -50\n                },\n                {\n                    \"memberId\": \"6a02492e692924cd79875ee9\",\n                    \"fullName\": \"Fouad Nassif\",\n                    \"email\": \"a52fouad@gmail.com\",\n                    \"walletBalance\": -2\n                }\n            ],\n            \"totalCount\": 2,\n            \"checkedAt\": \"2026-05-17T14:41:34.357Z\",\n            \"createdAt\": \"2026-05-17T14:41:34.369Z\",\n            \"updatedAt\": \"2026-05-17T14:41:34.369Z\"\n        }\n    },\n    \"timestamp\": \"2026-05-17T14:41:34.380Z\",\n    \"path\": \"/api/admin/alerts/negative-balances/run\"\n}"
+                },
+                {
+                  "name": "UnAuth",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/admin/alerts/negative-balances/run",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "admin",
+                        "alerts",
+                        "negative-balances",
+                        "run"
+                      ]
+                    }
+                  },
+                  "status": "Unauthorized",
+                  "code": 401,
+                  "_postman_previewlanguage": null,
+                  "header": [
+                    {
+                      "key": "X-Powered-By",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Content-Length",
+                      "value": "154"
+                    },
+                    {
+                      "key": "ETag",
+                      "value": "W/\"9a-biPEWugyGq8jN+aAaU/6+vnGHtk\""
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Tue, 19 May 2026 17:07:21 GMT"
+                    },
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    },
+                    {
+                      "key": "Keep-Alive",
+                      "value": "timeout=5"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"statusCode\": 401,\n    \"message\": \"Unauthorized\",\n    \"error\": \"Unauthorized\",\n    \"timestamp\": \"2026-05-19T17:07:21.645Z\",\n    \"path\": \"/api/admin/alerts/negative-balances/run\"\n}"
                 }
               ]
             },
