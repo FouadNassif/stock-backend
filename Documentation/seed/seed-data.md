@@ -123,7 +123,7 @@ These alerts support:
 - `POST /alerts`
 - `GET /alerts`
 - `DELETE /alerts/:id`
-- Stock price update alert-trigger behavior, if triggered by the stock update implementation
+- Async stock price update alert-trigger behavior through RabbitMQ `stock.price.updated`
 
 The seed does not print price alert IDs. Get them from `GET /alerts` after logging in as Adam.
 

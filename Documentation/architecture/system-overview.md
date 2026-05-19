@@ -81,7 +81,7 @@ MongoDB
 - Manages stock creation, listing, detail lookup by ticker, price history, updates, listing, and delisting.
 - Admin and analyst users can create/update/list/delist stocks.
 - Creating a stock creates an initial price history record.
-- Updating `currentPrice` creates a new price history record and checks matching price alerts.
+- Updating `currentPrice` creates a new price history record and publishes a RabbitMQ `stock.price.updated` event for asynchronous price alert processing.
 
 ### Wallet / Payments / Withdrawals
 
@@ -101,8 +101,9 @@ MongoDB
 
 - Members can create, list, and delete price alerts for listed stocks.
 - Alerts support `above` and `below` target-price directions.
-- Stock price updates call the alert checker and mark matching active alerts as triggered.
-- Triggered alerts publish notification events for email delivery.
+- Active alerts are alerts with `triggered: false`; triggered or deleted alerts do not count toward active alert limits.
+- Active alert limits are enforced per member and per stock using the documented `MAX_ACTIVE_PRICE_ALERTS_PER_MEMBER` and `MAX_ACTIVE_PRICE_ALERTS_PER_STOCK` limit names.
+- Price alert evaluation is triggered asynchronously through RabbitMQ after stock price updates. The stock service publishes `stock.price.updated`, an alerts consumer evaluates matching active alerts, and notification events are published for email delivery.
 
 ### Analytics Proxy
 
@@ -264,6 +265,7 @@ RabbitMQ is used to publish and consume notification/realtime events.
 
 - Notification events support email delivery for OTPs, wallet updates, withdrawals, trades, admin provisioning, identity decisions, suspensions, and price alerts.
 - Realtime events support portfolio update messages after trade execution.
+- Price alert evaluation is handled by a RabbitMQ consumer after `stock.price.updated`; matching alerts publish `price_alert.triggered` notification events.
 - The WebSocket gateway authenticates member sockets with JWT and lets members join their portfolio room.
 - Portfolio update events are emitted to the matching member room as `portfolio.updated`.
 

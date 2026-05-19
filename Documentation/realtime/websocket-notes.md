@@ -211,7 +211,42 @@ Notification events found in the codebase:
 
 The notification consumer receives these events and calls `NotificationsService`, which sends email through Nodemailer.
 
-## 10. Testing Realtime Locally
+## 10. Asynchronous Price Alert Processing
+
+Price alert evaluation runs asynchronously through RabbitMQ after a stock price update. This avoids making the admin/analyst stock update request wait for all alert checks and emails.
+
+Stock update request flow:
+
+```txt
+PATCH /stocks/:id/update
+  -> update stock currentPrice
+  -> create price history record
+  -> publish stock.price.updated event
+  -> return response to admin/analyst
+```
+
+Alert evaluation flow:
+
+```txt
+StockPriceUpdatedConsumer
+  -> receives stock.price.updated
+  -> checks active alerts for the updated stock
+  -> marks matching alerts as triggered
+  -> publishes price_alert.triggered
+```
+
+Email notification flow:
+
+```txt
+NotificationEventsConsumer
+  -> receives price_alert.triggered
+  -> calls NotificationsService
+  -> NotificationsService sends email through Nodemailer
+```
+
+One stock price update can trigger multiple member alerts. Each matched active alert is processed, marked triggered, and converted into a `price_alert.triggered` notification event. The current implementation runs these consumers inside the NestJS application through RabbitMQ microservice connections; there is no separate standalone notification service process documented here.
+
+## 11. Testing Realtime Locally
 
 Start Docker services:
 
@@ -266,7 +301,7 @@ RabbitMQ local debugging:
 - Check `notification_events` and `realtime_events` queues.
 - Use the management UI only for local debugging, not as the main test proof.
 
-## 11. Common Issues
+## 12. Common Issues
 
 RabbitMQ container is not running:
 
@@ -300,7 +335,7 @@ Cache/UI still stale:
 - Realtime events are hints. If the payload is not enough to update UI, call `GET /orders/portfolio`.
 - The portfolio cache is evicted after successful buy/sell, so the next REST portfolio request should rebuild from MongoDB.
 
-## 12. Production Notes
+## 13. Production Notes
 
 - Protect WebSocket connections with JWT authentication.
 - Do not expose RabbitMQ publicly.
