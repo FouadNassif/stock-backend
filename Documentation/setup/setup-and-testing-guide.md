@@ -272,14 +272,3 @@ Negative-balance seed member:
 
 - `negative.seed@example.com` exists for negative-balance system alert testing only.
 - Do not use that account as the normal member for wallet, order, or portfolio happy-path tests.
-
-## Final Submission Checklist
-
-- [ ] `npm run build` passes.
-- [ ] `npm run lint` passes.
-- [ ] Docker services start successfully.
-- [ ] NestJS app starts successfully.
-- [ ] FastAPI health check works.
-- [ ] Seed data runs successfully.
-- [ ] Postman collection is exported under `Documentation/postman/`.
-- [ ] Documentation folder is completed.
