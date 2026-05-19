@@ -28,6 +28,9 @@ type PriceAlertFilter = {
   triggered?: boolean;
 };
 
+const MAX_ACTIVE_PRICE_ALERTS_PER_MEMBER = 6;
+const MAX_ACTIVE_PRICE_ALERTS_PER_STOCK = 2;
+
 @Injectable()
 export class AlertsService {
   constructor(
@@ -76,6 +79,31 @@ export class AlertsService {
     if (existingAlert) {
       throw new BadRequestException(
         'An active price alert with the same condition already exists',
+      );
+    }
+
+    const activeAlertsCount = await this.priceAlertModel.countDocuments({
+      memberId: eligibleMember._id,
+      triggered: false,
+    });
+
+    if (activeAlertsCount >= MAX_ACTIVE_PRICE_ALERTS_PER_MEMBER) {
+      throw new BadRequestException(
+        `You can only have up to ${MAX_ACTIVE_PRICE_ALERTS_PER_MEMBER} active price alerts.`,
+      );
+    }
+
+    const activeAlertsForStockCount = await this.priceAlertModel.countDocuments(
+      {
+        memberId: eligibleMember._id,
+        stockId: stock._id,
+        triggered: false,
+      },
+    );
+
+    if (activeAlertsForStockCount >= MAX_ACTIVE_PRICE_ALERTS_PER_STOCK) {
+      throw new BadRequestException(
+        `You can only have up to ${MAX_ACTIVE_PRICE_ALERTS_PER_STOCK} active alerts per stock.`,
       );
     }
 

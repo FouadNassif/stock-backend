@@ -17,6 +17,8 @@ export enum NotificationEventType {
   MemberSuspendedEmailRequested = 'member.suspended.email.requested',
 
   PriceAlertTriggered = 'price_alert.triggered',
+
+  StockPriceUpdated = 'stock.price.updated',
 }
 
 export type OtpEmailRequestedPayload = {
@@ -97,6 +99,13 @@ export type PriceAlertTriggeredPayload = {
   direction: 'above' | 'below';
 };
 
+export type StockPriceUpdatedPayload = {
+  stockId: string;
+  ticker: string;
+  currentPrice: number;
+  updatedAt: string;
+};
+
 export type NotificationEventPayloadMap = {
   [NotificationEventType.OtpEmailRequested]: OtpEmailRequestedPayload;
   [NotificationEventType.PasswordResetOtpEmailRequested]: PasswordResetOtpEmailRequestedPayload;
@@ -116,6 +125,7 @@ export type NotificationEventPayloadMap = {
   [NotificationEventType.MemberSuspendedEmailRequested]: MemberSuspendedEmailRequestedPayload;
 
   [NotificationEventType.PriceAlertTriggered]: PriceAlertTriggeredPayload;
+  [NotificationEventType.StockPriceUpdated]: StockPriceUpdatedPayload;
 };
 
 export type NotificationEvent<

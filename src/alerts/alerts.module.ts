@@ -7,6 +7,7 @@ import { Stock, StockSchema } from '../stocks/schemas/stock.schema';
 import { AlertsController } from './alerts.controller';
 import { AlertsService } from './alerts.service';
 import { PriceAlert, PriceAlertSchema } from './schemas/price-alert.schema';
+import { StockPriceUpdatedConsumer } from './consumers/stock-price-updated.consumer';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { PriceAlert, PriceAlertSchema } from './schemas/price-alert.schema';
     ]),
     MessagingModule,
   ],
-  controllers: [AlertsController],
+  controllers: [AlertsController, StockPriceUpdatedConsumer],
   providers: [AlertsService],
   exports: [AlertsService],
 })
