@@ -21,7 +21,8 @@ import {
   AuditLogAction,
   AuditTargetType,
 } from '../audit-logs/types/audit-log-action.type';
-import { AlertsService } from '../alerts/alerts.service';
+import { MessagingService } from '../messaging/messaging.service';
+import { NotificationEventType } from '../messaging/types/notification-event.type';
 import { RedisService } from '../common/redis/redis.service';
 import { ConfigService } from '@nestjs/config';
 import { CacheKeys } from '../common/redis/constants/cache-keys.constant';
@@ -64,7 +65,7 @@ export class StocksService {
 
     private readonly auditLogsService: AuditLogsService,
 
-    private readonly alertsService: AlertsService,
+    private readonly messagingService: MessagingService,
 
     private readonly redisService: RedisService,
     private readonly configService: ConfigService,
@@ -364,9 +365,15 @@ export class StocksService {
         recordedAt: new Date(),
       });
 
-      await this.alertsService.checkAndTriggerAlertsForStock(
-        stock._id.toString(),
-      );
+      await this.messagingService.publishNotification({
+        type: NotificationEventType.StockPriceUpdated,
+        payload: {
+          stockId: stock._id.toString(),
+          ticker: stock.ticker,
+          currentPrice: stock.currentPrice,
+          updatedAt: new Date().toISOString(),
+        },
+      });
     }
 
     await this.auditLogsService.create({

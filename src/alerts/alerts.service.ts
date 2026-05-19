@@ -20,6 +20,7 @@ import {
   PriceAlertDocument,
 } from './schemas/price-alert.schema';
 import { PriceAlertResponse } from './types/price-alert-response.type';
+import { ConfigService } from '@nestjs/config';
 
 type PriceAlertFilter = {
   memberId: Types.ObjectId;
@@ -41,7 +42,8 @@ export class AlertsService {
     private readonly stockModel: Model<StockDocument>,
 
     private readonly messagingService: MessagingService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) { }
 
   async createAlert(
     currentMemberId: string,
@@ -50,6 +52,14 @@ export class AlertsService {
     message: string;
     alert: PriceAlertResponse;
   }> {
+    const maxActiveAlertsPerMember = this.configService.getOrThrow<number>(
+      'MAX_ACTIVE_PRICE_ALERTS_PER_MEMBER',
+    );
+
+    const maxActiveAlertsPerStock = this.configService.getOrThrow<number>(
+      'MAX_ACTIVE_PRICE_ALERTS_PER_STOCK',
+    );
+
     const member = await this.memberModel.findById(currentMemberId).exec();
     const eligibleMember = checkMemberEligibility(member, true);
 
@@ -76,6 +86,31 @@ export class AlertsService {
     if (existingAlert) {
       throw new BadRequestException(
         'An active price alert with the same condition already exists',
+      );
+    }
+
+    const activeAlertsCount = await this.priceAlertModel.countDocuments({
+      memberId: eligibleMember._id,
+      triggered: false,
+    });
+
+    if (activeAlertsCount >= maxActiveAlertsPerMember) {
+      throw new BadRequestException(
+        `You can only have up to ${maxActiveAlertsPerMember} active price alerts.`,
+      );
+    }
+
+    const activeAlertsForStockCount = await this.priceAlertModel.countDocuments(
+      {
+        memberId: eligibleMember._id,
+        stockId: stock._id,
+        triggered: false,
+      },
+    );
+
+    if (activeAlertsForStockCount >= maxActiveAlertsPerStock) {
+      throw new BadRequestException(
+        `You can only have up to ${maxActiveAlertsPerStock} active alerts per stock.`,
       );
     }
 

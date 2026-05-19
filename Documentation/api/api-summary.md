@@ -226,6 +226,8 @@ Common query/body fields:
 
 Cached stock routes include `cache.source` in the response where implemented. `clear=1` or `clear=true` can force cache refresh on implemented cached routes.
 
+When `PATCH /stocks/:id/update` changes `currentPrice`, the stock service saves the new price, creates a price history record, and publishes a RabbitMQ `stock.price.updated` event. Price alert checking happens asynchronously after the stock update response returns, so the admin/analyst request does not wait for all matching alerts and emails to finish.
+
 ## 8. Wallet and Payment Routes
 
 | Method | Path | Auth | Purpose |
@@ -286,7 +288,19 @@ Important fields:
 - `direction` can be `above` or `below`.
 - List alerts query: `stockId`, `direction`, `triggered`, `page`, `limit`.
 
-Alerts can be triggered by stock price updates when the new price satisfies the alert condition.
+Behavior and limits:
+
+- `POST /alerts` creates a member price alert for a listed stock.
+- `GET /alerts` lists the authenticated member's own alerts, including active and triggered alerts unless filtered by `triggered`.
+- `DELETE /alerts/:id` deletes/cancels one of the authenticated member's alerts.
+- Active alerts are alerts with `triggered: false`.
+- Triggered alerts and deleted alerts do not count toward active alert limits.
+- A member can have up to `MAX_ACTIVE_PRICE_ALERTS_PER_MEMBER` active alerts total. The documented default is `6`.
+- A member can have up to `MAX_ACTIVE_PRICE_ALERTS_PER_STOCK` active alerts for the same stock. The documented default is `2`.
+- The API also rejects duplicate active alerts with the same stock, target price, and direction.
+- If a duplicate or limit rule is exceeded, the API returns a `400` validation/business error.
+- Members do not manually trigger price alerts. Triggering happens after an admin or analyst updates a stock price and the new price satisfies the alert condition.
+- Matching active alerts are marked triggered and publish `price_alert.triggered` notification events for email delivery.
 
 ## 12. Analytics Routes - NestJS Protected Proxy
 

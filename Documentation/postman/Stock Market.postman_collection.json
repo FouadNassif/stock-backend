@@ -5179,7 +5179,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/stocks?isListed=false",
+              "raw": "{{base_url}}/stocks?clear=1",
               "host": [
                 "{{base_url}}"
               ],
@@ -5188,8 +5188,8 @@
               ],
               "query": [
                 {
-                  "key": "isListed",
-                  "value": "false"
+                  "key": "clear",
+                  "value": "1"
                 }
               ]
             }
@@ -8817,6 +8817,126 @@
               ],
               "cookie": [],
               "body": "{\n    \"statusCode\": 400,\n    \"message\": \"An active price alert with the same condition already exists\",\n    \"error\": \"Bad Request\",\n    \"timestamp\": \"2026-05-17T15:08:54.536Z\",\n    \"path\": \"/api/alerts\"\n}"
+            },
+            {
+              "name": "Stock Alerts Limit",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"stockId\": \"6a08d12fa645ebefbf93fc31\",\r\n    \"targetPrice\" : 41,\r\n    \"direction\": \"above\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/alerts",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "alerts"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "163"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"a3-tnzXlee/+oyPuP1lVXgaozATGWo\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 19 May 2026 19:38:36 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"statusCode\": 400,\n    \"message\": \"You can only have up to 2 active alerts per stock.\",\n    \"error\": \"Bad Request\",\n    \"timestamp\": \"2026-05-19T19:38:36.899Z\",\n    \"path\": \"/api/alerts\"\n}"
+            },
+            {
+              "name": "Alerts Limit",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"stockId\": \"6a08d12fa645ebefbf93fc31\",\r\n    \"targetPrice\" : 41,\r\n    \"direction\": \"above\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/alerts",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "alerts"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "159"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"9f-hKTht2PNhoC+b/rYgNSRWMqj8TM\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 19 May 2026 19:40:37 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"statusCode\": 400,\n    \"message\": \"You can only have up to 6 active price alerts.\",\n    \"error\": \"Bad Request\",\n    \"timestamp\": \"2026-05-19T19:40:37.929Z\",\n    \"path\": \"/api/alerts\"\n}"
             }
           ]
         },
