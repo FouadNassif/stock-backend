@@ -26,7 +26,7 @@ Create a project-root `.env` file before starting the NestJS app.
 If using the provided example file, copy it from:
 
 ```txt
-Documentation/.env.example
+Documentation/env/.env.example
 ```
 
 to:
