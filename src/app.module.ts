@@ -57,4 +57,4 @@ import { AnalyticsModule } from './analytics/analytics.module';
   ],
   controllers: [],
 })
-export class AppModule { }
+export class AppModule {}

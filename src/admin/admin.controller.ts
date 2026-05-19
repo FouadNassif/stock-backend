@@ -34,7 +34,7 @@ export class AdminController {
   constructor(
     private readonly adminService: AdminService,
     private readonly walletService: WalletService,
-  ) { }
+  ) {}
 
   @Post('auth/login')
   login(@Body() dto: AdminLoginDto): Promise<{
